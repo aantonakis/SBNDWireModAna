@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "track_ndhist.C": "cpp",
+        "track_scraper.C": "cpp",
+        "tpc_track_scraper.C": "cpp"
+    }
+}
