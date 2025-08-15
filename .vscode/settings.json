@@ -2,6 +2,10 @@
     "files.associations": {
         "track_ndhist.C": "cpp",
         "track_scraper.C": "cpp",
-        "tpc_track_scraper.C": "cpp"
+        "tpc_track_scraper.C": "cpp",
+        "get_1D_itm_results.C": "cpp",
+        "wiremod_ndwidths_data_coord.C": "cpp",
+        "get_2D_itm_results.C": "cpp",
+        "wiremod_ndwidths_nocalib.C": "cpp"
     }
 }
