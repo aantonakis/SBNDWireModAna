@@ -11,6 +11,8 @@
         "wiremod_ndamp_nocalib.C": "cpp",
         "wiremod_ndintegrals_nocalib.C": "cpp",
         "get_1D_itm_results_std_err.C": "cpp",
-        "wiremod_ndwidths_nocalib_fine.C": "cpp"
+        "wiremod_ndwidths_nocalib_fine.C": "cpp",
+        "ndhist_space_nocalib.C": "cpp",
+        "wiremod_ndintegrals_nocalib_fine.C": "cpp"
     }
 }
