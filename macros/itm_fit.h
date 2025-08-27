@@ -4,6 +4,7 @@
 #include <fstream>
 #include <vector>
 #include <cassert>
+#include <cmath>
 
 #include "TH1.h"
 #include "TH2.h"
@@ -58,6 +59,24 @@ void hist_mean_unc(const TH1* h, Double_t tol, Double_t* result) {
 }
 
 
+void hist_mean_std_error(const TH1* h, Double_t* result) {
+    //Int_t nbins = h->GetNbinsX();
+    if (h->Integral() == 0) return; 
+
+    Double_t mean = h->GetMean();
+    Double_t sigma = h->GetRMS();
+    Int_t N = h->GetEntries();
+    Int_t NI = h->Integral();
+    if (NI != N) {
+        std::cout << "Entries and Integral Don't Match?" << std::endl;
+        std::cout << "Entries: " << N << " Integral: " << NI << std::endl;
+    }
+    Double_t err = sigma / sqrt(NI);
+
+    result[0] = mean;
+    result[1] = err;
+}
+
 void iterative_truncated_mean(TH1* h, Double_t sig_down, Double_t sig_up, Double_t tol, Double_t* result) {
     if (sig_down > sig_up) {
         fprintf(stderr, "Warning: reversing iterative truncated mean limits [%.2e,%.2e]\n", sig_down, sig_up);
@@ -100,6 +119,49 @@ void iterative_truncated_mean(TH1* h, Double_t sig_down, Double_t sig_up, Double
 }
 
 
+void iterative_truncated_mean_std_err(TH1* h, Double_t sig_down, Double_t sig_up, Double_t tol, Double_t* result) {
+    if (sig_down > sig_up) {
+        fprintf(stderr, "Warning: reversing iterative truncated mean limits [%.2e,%.2e]\n", sig_down, sig_up);
+        Double_t tmp = sig_down;
+        sig_down = sig_up;
+        sig_up = tmp;
+    }
+
+    Double_t mean = h->GetMean();
+    Double_t sd = h->GetRMS();
+    std::cout << mean << ", " << sd << ", " << result[0] << "\n";
+
+    // return mean, std err of iterative truncated mean
+    if (TMath::Abs(result[0] - mean) < tol) {
+        hist_mean_std_error(h, result);
+        return;
+    }
+    result[0] = mean;
+    result[1] = sd;
+    
+    // get positions to cut based on quantiles
+    Double_t probs[1] = { 0.5 };
+    Double_t median[1];
+    h->GetQuantiles(1, median, probs);
+
+    std::cout << "median: " << median[0] << "\n";
+    std::cout << median[0] + sig_down * sd << ", " << median[0] + sig_up * sd << "\n";
+    
+    TH1* hnew = (TH1*)h->Clone();
+    hnew->Reset();
+    for (int i = 1; i <= h->GetNbinsX(); i++) {
+        if (h->GetBinLowEdge(i) > median[0] + sig_up * sd || h->GetBinLowEdge(i) + h->GetBinWidth(i) < median[0] + sig_down * sd) continue;
+        hnew->SetBinContent(i, h->GetBinContent(i));
+        hnew->SetBinError(i, h->GetBinError(i));
+    }
+    
+    iterative_truncated_mean_std_err(hnew, sig_down, sig_up, tol, result);
+    delete hnew;
+    return;
+}
+
+
+
 void profile_2d_proj(TH1D* h_out, const char* input_file, int dim, int tpc, int plane, int Ndim) {
     // Open the input file
     TFile* rfile = TFile::Open(input_file);
@@ -127,6 +189,47 @@ void profile_2d_proj(TH1D* h_out, const char* input_file, int dim, int tpc, int 
         Float_t itm_unc = 0.; // uncertainty of ITM
         Double_t itm_result[2];
         iterative_truncated_mean(h_1d_temp, -2, 1.75, 1.0e-4, itm_result);
+        itm = itm_result[0];
+        itm_unc = itm_result[1];
+        h_out->SetBinContent(i, itm);
+        h_out->SetBinError(i, itm_unc);
+        h_1d_temp->Delete();
+    }
+
+
+    // Clean up
+    delete h;
+    rfile->Close();
+
+}
+
+void profile_2d_proj_std_err(TH1D* h_out, const char* input_file, int dim, int tpc, int plane, int Ndim) {
+    // Open the input file
+    TFile* rfile = TFile::Open(input_file);
+    if (!rfile || rfile->IsZombie()) {
+        std::cerr << "Error opening file: " << input_file << std::endl;
+        return;
+    }
+
+    // Get the histogram
+    int idx = 3 * tpc + plane;
+    std::string num_str = "hwidth"+std::to_string(idx); // convert int to string
+    const char* cstr = num_str.c_str();
+    THnSparseD* h = (THnSparseD*)rfile->Get(cstr);
+    if (!h) {
+        std::cerr << "Histogram not found: hwidth" << idx << std::endl;
+        rfile->Close();
+        return;
+    }
+
+    // Get ITM for each slice in the specified dimension
+    for (int i = 1; i < h->GetAxis(dim)->GetNbins() + 1; i++) {
+        h->GetAxis(dim)->SetRange(i, i);
+        TH1D* h_1d_temp = h->Projection(Ndim -1);
+        Float_t itm = 0.; // iterative truncated mean (ITM)
+        Float_t itm_unc = 0.; // uncertainty of ITM
+        Double_t itm_result[2];
+        iterative_truncated_mean_std_err(h_1d_temp, -2, 1.75, 1.0e-4, itm_result);
         itm = itm_result[0];
         itm_unc = itm_result[1];
         h_out->SetBinContent(i, itm);
