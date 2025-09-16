@@ -27,7 +27,7 @@
 //#include "SCECorr.h"
 
 #include "../../include/elifetime.h"
-//#inlcude "../../include/SCECorrWireMod.h"
+#include "../../include/SCECorrWireMod.h"
 #include "../../include/YZNonuniformity.h"
 
 using ROOT::Math::XYZVector;
