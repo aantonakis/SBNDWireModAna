@@ -24,7 +24,7 @@
 #include "TObjArray.h"
 #include "Math/Vector3D.h"
 
-//#include "SCECorr.h"
+#include "SCECorr.h"
 
 #include "../../include/elifetime.h"
 #include "../../include/SCECorrWireMod.h"
@@ -52,7 +52,30 @@ const Double_t kXmin[kNdims] = { -230, -230, -30, -180, -180, 0, 0};
 const Double_t kXmax[kNdims] = { 230, 230, 530, 180, 180, 20, 5000};
 
 
-void ndhist_acpts_full(const char* input_file, const char* output_file) {
+void ndhist_acpts_full(const char* input_file, const char* output_file,
+
+    // calibration options
+    bool apply_sce = false,
+    bool apply_yz = false,
+    bool apply_elife = false,
+    bool isData = false
+
+) {
+
+    // ----- CALIBRATION INITIALIZATION ----- // 
+
+    SCECorr* sce_corr = nullptr;
+    if (apply_sce) {
+        sce_corr = load_sce(isData);
+    }
+
+    TH2F* CzyHist_sce[kNplanes][2];
+    if (apply_yz) {
+        printf("wiremod_ndhist: loading YZ nonuniformity TH2\n");
+        load_yz(CzyHist_sce, const char* yz_file)
+    }
+
+
 
     TFile* f = TFile::Open(input_file, "READ");
     if (!f || f->IsZombie()) {
