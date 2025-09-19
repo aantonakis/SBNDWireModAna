@@ -1,3 +1,7 @@
+
+#ifndef CALIBRATION_STANDARD_H
+#define CALIBRATION_STANDARD_H
+
 #include <iostream>
 #include <fstream>
 #include "TFile.h"
@@ -51,3 +55,5 @@ void initialize_yz(YZCorr *yz_corr, bool isData)
   yz_corr -> SetFileStr(yz_corr_f);
 
 }
+
+#endif
