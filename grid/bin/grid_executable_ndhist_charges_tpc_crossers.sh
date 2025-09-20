@@ -25,17 +25,19 @@ echo "@@ copy scripts"
 mkdir -p data/sample_list/sbndgpvm/
 cp ${filesFromSender}/input_list_${nProcess}.txt ./data/sample_list/sbndgpvm/
 ls -alh ./data/sample_list/sbndgpvm/
-cp ${filesFromSender}/setup.sh .
+cp ${filesFromSender}/setup_grid.sh .
 cp -r ${filesFromSender}/bin .
 cp -r ${filesFromSender}/include .
-cp -r ${filesFromSender}/run_lifetime_loop.C .
+cp -r ${filesFromSender}/include_wire .
+cp -r ${filesFromSender}/ndhist_charges_tpc_crossers_grid.C .
 
 echo "@@ make output/root"
 mkdir -p output/root
+#ifdh  mkdir_p ${outDir}
 ls -alh
 
-echo "@@ source setup.sh"
-source setup.sh
+echo "@@ source setup_grid.sh"
+source setup_grid.sh
 export SBND_YZCORR_PATH=${filesFromSender}/
 spack find ifdhc
 #spack load ifdhc@2.8.0 arch=linux-almalinux9-x86_64_v3
@@ -58,10 +60,11 @@ echo "@@ outDir : "${outDir}
 echo "@@ ifdh  mkdir_p "${outDir}
 ifdh  mkdir_p ${outDir}
 
-outFILE=${thisOutputCreationDir}/output/root/output_lifetime_${nProcess}.root
+outFILE=${thisOutputCreationDir}/output/root/output_ndhist_charges_tpc_crossers_${nProcess}.root
+#outFILE=${thisOutputCreationDir}/${outDir}/output_ndhist_charges_tpc_crossers_${nProcess}.root
 if [ -f "$outFILE" ]; then
-  echo "ifdh cp ${thisOutputCreationDir}/output/root/output_lifetime_${nProcess}.root ${outDir}/${DFPREFIX}_${nProcess}.root"
-  ifdh cp ${thisOutputCreationDir}/output/root/output_lifetime_${nProcess}.root ${outDir}/${DFPREFIX}_${nProcess}.root
+  echo "ifdh cp ${thisOutputCreationDir}/output/root/output_ndhist_charges_tpc_crossers_${nProcess}.root ${outDir}/${DFPREFIX}_${nProcess}.root"
+  ifdh cp ${thisOutputCreationDir}/output/root/output_ndhist_charges_tpc_crossers_${nProcess}.root ${outDir}/${DFPREFIX}_${nProcess}.root
   echo "ifdh cp ${thisOutputCreationDir}/log_${nProcess}.log ${outDir}/log_${nProcess}.log"
   ifdh cp ${thisOutputCreationDir}/log_${nProcess}.log ${outDir}/log_${nProcess}.log
   echo "@@ Done!"

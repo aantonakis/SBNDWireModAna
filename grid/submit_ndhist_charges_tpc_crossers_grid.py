@@ -59,15 +59,16 @@ def run_grid(inputfiles):
             this_list.write('%s\n'%(flist[i_f]))
         this_list.close()
         
-    os.system('cp ./grid/bin/grid_executable_ndhist_charges_tpc_crossers.sh %s' %MasterJobDir)
+    #os.system('cp ./grid/bin/grid_executable_ndhist_charges_tpc_crossers.sh %s' %MasterJobDir)
+    os.system('cp ../grid/bin/grid_executable_ndhist_charges_tpc_crossers.sh %s' %MasterJobDir)
 
     # 5) copy scripts for running run_lifetime_loop.C
     WIREMOD_WORKING_DIR = os.environ['WIREMOD_WORKING_DIR']
     CALIB_WORKING_DIR = os.environ['CALIB_WORKING_DIR']
     cp_include = "cp -r " + CALIB_WORKING_DIR + "/include " + MasterJobDir
-    cp_include2 = "cp -r " + WIREMOD_WORKING_DIR + "/include " + MasterJobDir
+    cp_include2 = "cp -r " + WIREMOD_WORKING_DIR + "/include_wire " + MasterJobDir
     #cp_setup = "cp " + CALIB_WORKING_DIR + "/setup.sh " + MasterJobDir
-    cp_setup = "cp " + WIREMOD_WORKING_DIR + "/setup.sh " + MasterJobDir
+    cp_setup = "cp " + WIREMOD_WORKING_DIR + "/setup_grid.sh " + MasterJobDir
     cp_BashColorSets = "cp -r " + CALIB_WORKING_DIR + "/bin " + MasterJobDir
     cp_script = "cp " + WIREMOD_WORKING_DIR + "/macros/NDHist/ndhist_charges_tpc_crossers_grid.C " + MasterJobDir
     os.system(cp_include)

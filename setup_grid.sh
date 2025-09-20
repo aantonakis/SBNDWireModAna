@@ -1,8 +1,10 @@
-export CALIB_WORKING_DIR="/exp/sbnd/app/users/aantonak/SBND_calib_recom"
+export WIREMOD_WORKING_DIR=`pwd`
+export CALIB_WORKING_DIR=`pwd`
 export DATA_PATH=$CALIB_WORKING_DIR/data/
 export PLOT_PATH=$CALIB_WORKING_DIR/output/plots/
 export OUTPUTROOT_PATH=$CALIB_WORKING_DIR/output/root/
-export ROOT_INCLUDE_PATH=$ROOT_INCLUDE_PATH:$CALIB_WORKING_DIR/include/
+export ROOT_INCLUDE_PATH=$ROOT_INCLUDE_PATH:$CALIB_WORKING_DIR/include/:$WIREMOD_WORKING_DIR/include_wire/
+#export ROOT_INCLUDE_PATH=$CALIB_WORKING_DIR/include/:$WIREMOD_WORKING_DIR/include/
 source $CALIB_WORKING_DIR/bin/BashColorSets.sh
 
 #####################################################################################

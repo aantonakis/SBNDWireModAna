@@ -397,7 +397,7 @@ void ndhist_charges_tpc_crossers_grid(TString list_file, TString out_suffix,
     
 
     TString output_rootfile_dir = getenv("OUTPUTROOT_PATH");
-    TString output_file_name = output_rootfile_dir + "/output_recom_loop_emb_" + out_suffix + ".root";
+    TString output_file_name = output_rootfile_dir + "/output_ndhist_charges_tpc_crossers_" + out_suffix + ".root";
     out_rootfile = new TFile(output_file_name, "RECREATE");
     out_rootfile -> cd();
     for (unsigned i = 0; i < kNplanes * kNTPCs; i++) {
