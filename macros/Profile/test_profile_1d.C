@@ -61,14 +61,13 @@ void test_profile_1d(const char* input_file, const char* output_file,
 
     // Get ND hists from the input file
     THnSparseD* h[kNplanes * kNTPCs];
-    TH2I* hi[kNplanes * kNTPCs * kNdims];
     for (unsigned i = 0; i < kNplanes * kNTPCs; i++) {
         h[i] = f->Get(Form("hwidth%d", i));
        
-        results[Form("hwidth%d", i)] = ProfileResult1D result = ProfileSparseDynamic1D(h[i],
-          									       profileDim,
-          									       projDim,
-         									       minTracks);
+        results[Form("hwidth%d", i)]  = ProfileSparseDynamic1D(h[i],
+          				                       profileDim,
+          					               projDim,
+         						       minTracks);
 
     } 
 

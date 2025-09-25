@@ -8,7 +8,6 @@
 #include "TH1F.h"
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
-#include "mylib.h"
 #include "Math/Vector3D.h"
 
 using ROOT::Math::XYZVector;
@@ -39,7 +38,7 @@ ProfileResult1D ProfileSparseDynamic1D(
     int projDim,
     int minCounts = 1000)
 {
-    ProfileResult result;
+    ProfileResult1D result;
     if (!h) {
         std::cerr << "Null THnSparseD provided!\n";
         return result;
@@ -98,7 +97,7 @@ ProfileResult1D ProfileSparseDynamic1D(
 
 
 
-void SaveProfileResult1D(const ProfileResult& result, const std::string& outFile) {
+void SaveProfileResult1D(const ProfileResult1D& result, const std::string& outFile) {
     TFile f(outFile.c_str(), "RECREATE");
 
     result.summary->Write("summary");
@@ -127,13 +126,13 @@ void SaveProfileResult1DToDir(const ProfileResult1D& result, TDirectory* dir) {
   }
 }
 
-void SaveAllProfileResult1D(const std::map<std::string, ProfileResult>& results,
-                           const std::string& outFile) {
-    TFile f(outFile.c_str(), "RECREATE");
+void SaveAllProfileResult1D(const std::map<std::string, ProfileResult1D>& results,
+                           const char* outFile) {
+    TFile f(outFile, "RECREATE");
 
     for (const auto& [name, res] : results) {
         TDirectory* resDir = f.mkdir(name.c_str());
-        SaveProfileResultToDir(res, resDir);
+        SaveProfileResult1DToDir(res, resDir);
     }
 
     f.Close();

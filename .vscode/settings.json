@@ -15,6 +15,9 @@
         "ndhist_space_nocalib.C": "cpp",
         "wiremod_ndintegrals_nocalib_fine.C": "cpp",
         "ndhist_angle_nocalib.C": "cpp",
-        "ndhist_acpts_full.C": "cpp"
+        "ndhist_acpts_full.C": "cpp",
+        "test_profile_1d.C": "cpp",
+        "ndhist_charges_tpc_crossers_grid.C": "cpp",
+        "ndhist_charges_tpc_crossers_grid_ntrack.C": "cpp"
     }
 }
