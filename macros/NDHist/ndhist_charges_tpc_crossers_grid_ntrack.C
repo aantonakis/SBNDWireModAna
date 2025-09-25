@@ -392,7 +392,7 @@ void ndhist_charges_tpc_crossers_grid_ntrack(TString list_file, TString out_suff
                     // select by TPC
                     unsigned hit_idx = ip + kNplanes * tpc[ip][i];
                     h[hit_idx]->Fill(val);
-                    if (hTrackFlag[hit_idx]->GetBinContent(hTrackFlag[hit_idx]->FindFixBin(valT)) == 0) {
+                    if (hTrackFlag[hit_idx]->GetBinContent(hTrackFlag[hit_idx]->GetBin(valT)) == 0) {
                         hTrackFlag[hit_idx]->Fill(valT);
                         hTrack[hit_idx]->Fill(valT);
                     }
@@ -414,10 +414,10 @@ void ndhist_charges_tpc_crossers_grid_ntrack(TString list_file, TString out_suff
             delete hflag.at(i);
         }
         
-        delete hTrackFlag;
-        //for (unsigned i = 0; i < kNplanes * kNTPCs; i++) {
-        //    delete hTrackFlag[i];
-        //}
+        //delete hTrackFlag;
+        for (unsigned i = 0; i < kNplanes * kNTPCs; i++) {
+            delete hTrackFlag[i];
+        }
     
 
     printf("Processed %lu tracks (%lu hits)\n", track_counter, nevts);
