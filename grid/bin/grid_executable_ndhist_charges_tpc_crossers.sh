@@ -49,8 +49,39 @@ spack find root
 echo "@@ run"
 # Booleans: apply_sce, apply_yz, apply_elife, apply_recomb, IsData
 
+# //////////////////////////////////////////////////////////
+
+
 # All calibrations for DATA
-root -l -b -q "ndhist_charges_tpc_crossers_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", true, true, true, true, true)" &> log_${nProcess}.log
+#root -l -b -q "ndhist_charges_tpc_crossers_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", true, true, true, true, true)" &> log_${nProcess}.log
+
+# SCE Only
+#root -l -b -q "ndhist_charges_tpc_crossers_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", true, false, false, false, true)" &> log_${nProcess}.log
+
+# YZ only
+#root -l -b -q "ndhist_charges_tpc_crossers_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", false, true, false, false, true)" &> log_${nProcess}.log
+
+# E-life only 
+#root -l -b -q "ndhist_charges_tpc_crossers_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", false, false, true, false, true)" &> log_${nProcess}.log
+
+
+# ////////////// Simulation Jobs ///////////////////////////
+
+# all calibrations for mc
+#root -l -b -q "ndhist_charges_tpc_crossers_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", true, true, true, true, false)" &> log_${nProcess}.log
+
+# SCE Only
+#root -l -b -q "ndhist_charges_tpc_crossers_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", true, false, false, false, false)" &> log_${nProcess}.log
+
+# YZ only
+root -l -b -q "ndhist_charges_tpc_crossers_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", false, true, false, false, false)" &> log_${nProcess}.log
+
+# E-life only 
+#root -l -b -q "ndhist_charges_tpc_crossers_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", false, false, true, false, false)" &> log_${nProcess}.log
+
+
+# //////////////////////////////////////////////////////////
+
 ls -alh
 
 echo "@@ setup IFDH_CP_MAXRETRIES to 2"

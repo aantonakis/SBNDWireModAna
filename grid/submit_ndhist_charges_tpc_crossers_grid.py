@@ -4,12 +4,12 @@ import argparse
 import warnings
 
 parser = argparse.ArgumentParser(
-    description="SBND e-lifetime grid submission command: process input calilb ntuples and produce output root files with dQdx vs. t_drift.",
+    description="grid submission command: process input calilb ntuples and produce N dimensional histograms of hit charges",
     epilog="""\
 Examples:
 
   -- 
-  $ python run_df_maker.py -ngrid 2 -c ./configs/cohpi_slcdf.py -o test_cohpi_slcdf -i input_0.root,input_1.root,...
+  $ python submission_script.py -ngrid [number of grid jobs] -nfile [number of files to process] -o [output prefix] -l [xrootd file list]
 
   -- Note!!
   Output root files are sent to /pnfs/<exp>/scratch/users/<User>/sbnd_calib_out
