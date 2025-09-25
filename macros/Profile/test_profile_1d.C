@@ -60,14 +60,23 @@ void test_profile_1d(const char* input_file, const char* output_file,
     std::map<std::string, ProfileResult1D> results;
 
     // Get ND hists from the input file
-    THnSparseD* h[kNplanes * kNTPCs];
+    //THnSparseD* h[kNplanes * kNTPCs];
     for (unsigned i = 0; i < kNplanes * kNTPCs; i++) {
-        h[i] = f->Get(Form("hwidth%d", i));
+        // Get the histogram
+        //int idx = 3 * tpc + plane;
+        std::string num_str = "hwidth"+std::to_string(i); // convert int to string
+        std::string trk_str = "htrack"+std::to_string(i);
+        const char* cstr = num_str.c_str();
+        const char* cstrT = trk_str.c_str();
+        THnSparseD* h = (THnSparseD*)f->Get(cstr);
+        THnSparseD* hT = (THnSparseD*)f->Get(cstrT);
+        //h[i] = f->Get(Form("hwidth%d", i));
        
-        results[Form("hwidth%d", i)]  = ProfileSparseDynamic1D(h[i],
-          				                       profileDim,
-          					               projDim,
-         						       minTracks);
+        results[num_str] = ProfileSparseDynamic1D(h,
+                                                  hT,
+          				                          profileDim,
+          					                      projDim,
+         						                  minTracks);
 
     } 
 

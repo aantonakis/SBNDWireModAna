@@ -34,6 +34,7 @@ struct ProfileResult2D {
 
 ProfileResult1D ProfileSparseDynamic1D(
     THnSparseD* h,
+    THnSparseD* hT, // track count histogram
     int profileDim,
     int projDim,
     int minCounts = 1000)
@@ -43,13 +44,14 @@ ProfileResult1D ProfileSparseDynamic1D(
         std::cerr << "Null THnSparseD provided!\n";
         return result;
     }
+    TH1D* h_1d_axis = hT->Projection(profileDim);
 
-    TAxis* axis = h->GetAxis(profileDim);
-    int nBins = axis->GetNbins();
+    //TAxis* axis = h->GetAxis(profileDim);
+    int nBins = h_1d_axis->GetNbinsX();
     std::vector<double> binEdges;   // store dynamic edges
     std::vector<double> binCounts;  // store counts per dynamic bin
 
-    binEdges.push_back(axis->GetBinLowEdge(1)); // first edge
+    binEdges.push_back(h_1d_axis->GetXaxis()->GetBinLowEdge(1)); // first edge
 
     int startBin = 1;
     while (startBin <= nBins) {
@@ -57,30 +59,32 @@ ProfileResult1D ProfileSparseDynamic1D(
         double totalEntries = 0.0;
 
         // expand range until minCounts satisfied or we run out of bins
-        
         while (endBin <= nBins && totalEntries < minCounts) {
-            totalEntries += axis->GetBinContent(endBin);
+            totalEntries += h_1d_axis->GetBinContent(endBin);
             endBin++;
         }
 
-	// set range for this slice
-	axis->SetRange(startBin, endBin - 1);
+	    // set range for this slice
+	    //axis->SetRange(startBin, endBin - 1);
 
-	// Project
+        // set range to current dynamical bin
+        h->GetAxis(profileDim)->SetRange(startBin, endBin);
+	    // Project
         TH1D* proj = h->Projection(projDim);
         proj->SetDirectory(nullptr);
-        proj->SetName(Form("proj_dim%d_%d_%d", projDim, startBin, endBin - 1));
+        proj->SetName(Form("proj_dim%d_%d_%d", projDim, startBin, endBin));
         result.projections.push_back(proj);
 
-	// Record binning info
-        binEdges.push_back(axis->GetBinUpEdge(endBin - 1));
+	    // Record binning info
+        binEdges.push_back(h_1d_axis->GetXaxis()->GetBinUpEdge(endBin));
         binCounts.push_back(totalEntries);
 
-	startBin = endBin;
+	    startBin = endBin;
 
     }
     // reset axis
-    axis->SetRange();
+    //axis->SetRange();
+    h->GetAxis(profileDim)->SetRange();
 
     // make summary histogram with variable binning
     result.summary = new TH1D("profile_summary",
@@ -94,7 +98,6 @@ ProfileResult1D ProfileSparseDynamic1D(
 
     return result;
 }
-
 
 
 void SaveProfileResult1D(const ProfileResult1D& result, const std::string& outFile) {
