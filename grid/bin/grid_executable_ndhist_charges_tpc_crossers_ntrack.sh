@@ -71,7 +71,7 @@ echo "@@ run"
 #root -l -b -q "ndhist_charges_tpc_crossers_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", true, true, true, true, false)" &> log_${nProcess}.log
 
 # No calibrations
-root -l -b -q "ndhist_charges_tpc_crossers_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", false, false, false, false, false)" &> log_${nProcess}.log
+root -l -b -q "ndhist_charges_tpc_crossers_grid_ntrack.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", false, false, false, false, false)" &> log_${nProcess}.log
 
 # SCE Only
 #root -l -b -q "ndhist_charges_tpc_crossers_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", true, false, false, false, false)" &> log_${nProcess}.log
