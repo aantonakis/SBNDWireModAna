@@ -61,6 +61,7 @@ void test_profile_1d(const char* input_file, const char* output_file,
 
     // Get ND hists from the input file
     //THnSparseD* h[kNplanes * kNTPCs];
+    std::cout << "Loop over the differnt input hists" << std::endl;
     for (unsigned i = 0; i < kNplanes * kNTPCs; i++) {
         // Get the histogram
         //int idx = 3 * tpc + plane;
@@ -70,7 +71,7 @@ void test_profile_1d(const char* input_file, const char* output_file,
         const char* cstrT = trk_str.c_str();
         THnSparseD* h = (THnSparseD*)f->Get(cstr);
         THnSparseD* hT = (THnSparseD*)f->Get(cstrT);
-        //h[i] = f->Get(Form("hwidth%d", i));
+        std::cout << "Processing hist: " << cstr << " and " << cstrT << std::endl;
        
         results[num_str] = ProfileSparseDynamic1D(h,
                                                   hT,
@@ -79,7 +80,7 @@ void test_profile_1d(const char* input_file, const char* output_file,
          						                  minTracks);
 
     } 
-
+    std::cout << "Saving all the results to file: " << output_file << std::endl;
     SaveAllProfileResult1D(results, output_file);
     delete f;    
 }

@@ -67,6 +67,8 @@
         "unordered_map": "cpp",
         "variant": "cpp",
         "vector": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "profile_smooth_1d_itm.C": "cpp",
+        "profile_1d_itm_std.C": "cpp"
     }
 }

@@ -45,6 +45,7 @@ ProfileResult1D ProfileSparseDynamic1D(
         return result;
     }
     TH1D* h_1d_axis = hT->Projection(profileDim);
+    std::cout << "Got the 1D axis projection" << std::endl;
 
     //TAxis* axis = h->GetAxis(profileDim);
     int nBins = h_1d_axis->GetNbinsX();
@@ -52,35 +53,46 @@ ProfileResult1D ProfileSparseDynamic1D(
     std::vector<double> binCounts;  // store counts per dynamic bin
 
     binEdges.push_back(h_1d_axis->GetXaxis()->GetBinLowEdge(1)); // first edge
-
+    std::cout << "Start dynamic binning with " << nBins << " bins, min counts: " << minCounts << std::endl;
     int startBin = 1;
+    int newBin = 1;
     while (startBin <= nBins) {
         int endBin = startBin;
         double totalEntries = 0.0;
-
+        std::cout << "Starting new dynamic bin at bin " << startBin << std::endl;
         // expand range until minCounts satisfied or we run out of bins
         while (endBin <= nBins && totalEntries < minCounts) {
+            if (h_1d_axis->GetBinContent(endBin) == 0) {
+                endBin++;
+                break;
+            }
             totalEntries += h_1d_axis->GetBinContent(endBin);
             endBin++;
         }
+        std::cout << "  Created bin from " << startBin << " to " << endBin-1
+                  << " with total counts: " << totalEntries << std::endl;
 
 	    // set range for this slice
 	    //axis->SetRange(startBin, endBin - 1);
 
         // set range to current dynamical bin
-        h->GetAxis(profileDim)->SetRange(startBin, endBin);
+        h->GetAxis(profileDim)->SetRange(startBin, endBin-1);
+        std::cout << "  Set range on profile dim " << profileDim << std::endl;
 	    // Project
         TH1D* proj = h->Projection(projDim);
+        std::cout << "  Made projection on dim " << projDim << std::endl;
         proj->SetDirectory(nullptr);
-        proj->SetName(Form("proj_dim%d_%d_%d", projDim, startBin, endBin));
+        proj->SetName(Form("proj_%d", newBin));
         result.projections.push_back(proj);
-
+        std::cout << "  Stored projection" << std::endl;
 	    // Record binning info
-        binEdges.push_back(h_1d_axis->GetXaxis()->GetBinUpEdge(endBin));
+        binEdges.push_back(h_1d_axis->GetXaxis()->GetBinUpEdge(endBin-1));
         binCounts.push_back(totalEntries);
 
 	    startBin = endBin;
-
+        std::cout << "  Moving to next bin at " << startBin << std::endl;
+        std::cout << "------------------------" << std::endl;
+        newBin += 1;
     }
     // reset axis
     //axis->SetRange();
