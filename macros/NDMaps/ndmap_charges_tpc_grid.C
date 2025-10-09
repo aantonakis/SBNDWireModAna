@@ -42,8 +42,8 @@ std::vector<TString> filenames_from_input(const TString&, int);
 TString basename_prefix(const TString&, const TString& prefix="", const TString& suffix="");
 bool is_int(Float_t);
 
-const UInt_t kNplanes = 3;
-const UInt_t kNTPCs = 2;
+//const UInt_t kNplanes = 3;
+//const UInt_t kNTPCs = 2;
 const UInt_t kNdims = 6;
 
 const Float_t kTrackCut = 60.; // cm
@@ -125,6 +125,9 @@ void ndmap_charges_tpc_grid(TString list_file, TString out_suffix,
     THnSparseD* hTrack[kNplanes * kNTPCs];
     THnSparseD* hTrackFlag[kNplanes * kNTPCs]; // reset for each track
 
+    // Keep track of the 1d distributions in each multidimensional bin
+    std::unordered_map<Long64_t, TH1D*> spectra[kNplanes * kNTPCs];
+
     TH2I* hi[kNplanes * kNTPCs * kNdims];
     for (unsigned i = 0; i < kNplanes * kNTPCs; i++) {
         h[i] = new THnSparseD(Form("hwidth%d", i), "", kNdims, kNbins, kXmin, kXmax);
@@ -147,10 +150,10 @@ void ndmap_charges_tpc_grid(TString list_file, TString out_suffix,
       // skip short tracks
       size_t nhits = my.rr[2].GetSize();
       if (nhits == 0) {
-        fprintf(stderr, "Warning: Selected track (idx=%d, selected=%d) with no hits? Run=%d, Subrun=%d, Evt=%d. Skipping!\n", track_idx, *selected, *run, *subrun, *evt);
+        fprintf(stderr, "Warning: Selected track (idx=%d, selected=%d) with no hits? Run=%d, Subrun=%d, Evt=%d. Skipping!\n", track_idx, *my.selected, *my.run, *my.subrun, *my.evt);
         continue;
       }
-      if (rr[2][nhits - 1] < kTrackCut) continue;
+      if (my.rr[2][nhits - 1] < kTrackCut) continue;
 
       track_counter++;
             
@@ -242,7 +245,18 @@ void ndmap_charges_tpc_grid(TString list_file, TString out_suffix,
           };
 
           // select by TPC
-          unsigned hit_idx = ip + kNplanes * tpc[ip][i];
+          unsigned hit_idx = ip + kNplanes * my.tpc[ip][i];
+
+
+	  // New Functionality --> Get the global bin 
+	  Long64_t Gbin = hTrack[hit_idx]->GetBin(valT);
+	  auto it = spectra[hit_idx].find(Gbin);
+          if (it == spectra[hit_idx].end()) {
+            TString hname = Form("h_bin%lld", Gbin);
+            spectra[hit_idx][Gbin] = new TH1D(hname, hname, 2500, 0, 5000);
+          }
+          spectra[hit_idx][Gbin]->Fill(my.integral[ip][i]*total_q_corr);
+
           h[hit_idx]->Fill(val);
           if (hTrackFlag[hit_idx]->GetBinContent(hTrackFlag[hit_idx]->GetBin(valT)) == 0) {
             hTrackFlag[hit_idx]->Fill(valT);
@@ -260,18 +274,31 @@ void ndmap_charges_tpc_grid(TString list_file, TString out_suffix,
 
     printf("Processed %lu tracks (%lu hits)\n", track_counter, nevts);
     
+    std::cout << "About to write histograms to the output file" << std::endl;
 
     TString output_rootfile_dir = getenv("OUTPUTROOT_PATH");
-    TString output_file_name = output_rootfile_dir + "/output_ndhist_charges_tpc_crossers_" + out_suffix + ".root";
+    TString output_file_name = output_rootfile_dir + "/output_ndmap_charges_tpc_" + out_suffix + ".root";
     out_rootfile = new TFile(output_file_name, "RECREATE");
     out_rootfile -> cd();
     for (unsigned i = 0; i < kNplanes * kNTPCs; i++) {
+	std::cout << "Writing histograms for plane " << i << std::endl;
         h[i]->Write();
         hTrack[i]->Write();
-        for (unsigned j = 0; j < kNdims; j++) {
-            hi[i * kNdims + j]->Write();
-        }
+	
+	// Directory for each plane --> 6 in total including each TPC
+	TDirectory* P = out_rootfile->mkdir(Form("Plane_%d", i));
+	P->cd();
+	std::cout << "Loop over spectra ..." << std::endl;
+    	// New Functionality --> unpack all the bins for future profiling
+	for (auto& [b, hist] : spectra[i]) {
+	  int group = b / 1000; // 1000 bins per dir
+	  TDirectory* d = P->GetDirectory(Form("group_%d", group));
+	  if (!d) d = P->mkdir(Form("group_%d", group));
+	  d->cd();
+          hist->Write();
+	}
     }
+
     out_rootfile -> Close();
 
 }

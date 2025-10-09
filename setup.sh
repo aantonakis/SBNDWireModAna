@@ -1,4 +1,4 @@
-export WIREMOD_WORKING_DIR="/exp/sbnd/app/users/aantonak/SBNDWireModAna"
+export WIREMOD_WORKING_DIR="/exp/sbnd/app/users/aantonak/WireModProd/SBNDWireModAna"
 export CALIB_WORKING_DIR="/exp/sbnd/app/users/aantonak/SBND_calib_recom"
 export DATA_PATH=$CALIB_WORKING_DIR/data/
 export PLOT_PATH=$CALIB_WORKING_DIR/output/plots/
