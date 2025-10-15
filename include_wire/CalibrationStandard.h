@@ -1,4 +1,3 @@
-
 #ifndef CALIBRATION_STANDARD_H
 #define CALIBRATION_STANDARD_H
 
@@ -15,6 +14,17 @@
 #include "YZCorr.h"
 
 using ROOT::Math::XYZVector;
+
+const float calib_const_data0 = 0.0223037; 
+const float calib_const_data1 = 0.0219534; 
+const float calib_const_data2 = 0.0215156;
+
+const float calib_const_mc0 = 0.0203521;
+const float calib_const_mc1 = 0.0202351;
+const float calib_const_mc2 = 0.0200727; 
+
+
+float my_calib_const_corr(bool isData, int plane);
 
 double dqdx_scale_correction_angle(double theta){
 
@@ -54,6 +64,28 @@ void initialize_yz(YZCorr *yz_corr, bool isData)
   if(!isData) yz_corr_f = "yz_correction_map_mcp2025b5e18.root";
   yz_corr -> SetFileStr(yz_corr_f);
 
+}
+
+// Calibration Constant Correction
+float my_calib_const_corr(bool isData, int plane) 
+{
+
+  if (isData) return 1.;
+
+  if (plane == 0) {
+    return calib_const_mc0/calib_const_data0;
+  }
+  else if (plane == 1) {
+    return calib_const_mc1/calib_const_data1;
+  }
+  else if (plane == 2) {
+    return calib_const_mc2/calib_const_data2;
+  }
+  else {
+    std::cout << "Invalid use of Calib Constant Correction!!!" << std::endl;
+    return 1.;
+  }
+  return 1.;
 }
 
 #endif

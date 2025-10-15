@@ -138,28 +138,5 @@ struct MyCalib {
 	  {}
 };
 
-/*
-class CalibNTupleInfo {
-
-public:
-        CalibNTupleInfo() {}
-        ~CalibNTupleInfo() {}
-
-
-	TTreeReaderValue<int> run;
-	
-        void InitializeReader(TTreeReader reader) {
-	  run(reader, "meta.run");
-          
-	}
-
-
-private:
-
-// might not need this
-
-};
-*/
-
 #endif
 

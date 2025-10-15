@@ -29,7 +29,7 @@ cp ${filesFromSender}/setup_grid.sh .
 cp -r ${filesFromSender}/bin .
 cp -r ${filesFromSender}/include .
 cp -r ${filesFromSender}/include_wire .
-cp -r ${filesFromSender}/ndmap_charges_tpc_grid.C .
+cp -r ${filesFromSender}/ndmap_tracks_tpc_grid.C .
 
 echo "@@ make output/root"
 mkdir -p output/root
@@ -64,17 +64,12 @@ echo "@@ run"
 
 # ////////////// Simulation Jobs ///////////////////////////
 
-# all calibrations for mc
-root -l -b -q "ndmap_charges_tpc_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", true, true, true, true, false)" &> log_${nProcess}.log
+# MC with SCE
+root -l -b -q "ndmap_tracks_tpc_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", true, false)" &> log_${nProcess}.log
 
-# No calibrations
-#root -l -b -q "ndmap_charges_tpc_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", false, false, false, false, false)" &> log_${nProcess}.log
+# Data with SCE
+#root -l -b -q "ndmap_tracks_tpc_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", true, true)" &> log_${nProcess}.log
 
-# SCE Only
-
-# YZ only
-
-# E-life only 
 
 
 # //////////////////////////////////////////////////////////
@@ -88,11 +83,11 @@ echo "@@ outDir : "${outDir}
 echo "@@ ifdh  mkdir_p "${outDir}
 ifdh  mkdir_p ${outDir}
 
-outFILE=${thisOutputCreationDir}/output/root/output_ndmap_charges_tpc_${nProcess}.root
+outFILE=${thisOutputCreationDir}/output/root/output_ndmap_tracks_tpc_${nProcess}.root
 #outFILE=${thisOutputCreationDir}/${outDir}/output_ndhist_charges_tpc_crossers_${nProcess}.root
 if [ -f "$outFILE" ]; then
-  echo "ifdh cp ${thisOutputCreationDir}/output/root/output_ndmap_charges_tpc_${nProcess}.root ${outDir}/${DFPREFIX}_${nProcess}.root"
-  ifdh cp ${thisOutputCreationDir}/output/root/output_ndmap_charges_tpc_${nProcess}.root ${outDir}/${DFPREFIX}_${nProcess}.root
+  echo "ifdh cp ${thisOutputCreationDir}/output/root/output_ndmap_tracks_tpc_${nProcess}.root ${outDir}/${DFPREFIX}_${nProcess}.root"
+  ifdh cp ${thisOutputCreationDir}/output/root/output_ndmap_tracks_tpc_${nProcess}.root ${outDir}/${DFPREFIX}_${nProcess}.root
   echo "ifdh cp ${thisOutputCreationDir}/log_${nProcess}.log ${outDir}/log_${nProcess}.log"
   ifdh cp ${thisOutputCreationDir}/log_${nProcess}.log ${outDir}/log_${nProcess}.log
   echo "@@ Done!"

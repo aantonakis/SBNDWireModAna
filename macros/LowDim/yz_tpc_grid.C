@@ -48,14 +48,14 @@ const UInt_t kNdims = 6;
 
 const Float_t kTrackCut = 60.; // cm
 
-const TString kLabels[kNdims] = { "x", "y", "z", "txz", "tyz", "integral"};
-const TString kTitles[kNdims] = { "x (cm)", "y (cm)", "z (cm)", 
-    "ThetaXZ (deg)", "ThetaYZ (deg)", "Integral"};
+//const TString kLabels[kNdims] = { "x", "y", "z", "txz", "tyz", "integral"};
+//const TString kTitles[kNdims] = { "x (cm)", "y (cm)", "z (cm)", 
+//    "ThetaXZ (deg)", "ThetaYZ (deg)", "Integral"};
 
 // Binnning --> Go as fine as possible and coarse grain later if needed
-//const Int_t kNbins[kNdims] = { 460, 460, 560, 360, 360, 2500};
-//const Double_t kXmin[kNdims] = { -230, -230, -30, -180, -180, 0};
-//const Double_t kXmax[kNdims] = { 230, 230, 530, 180, 180, 5000};
+const Int_t kNbins[kNdims] = { 400, 500, 1000};
+const Double_t kXmin[kNdims] = { -200, 0, 0};
+const Double_t kXmax[kNdims] = { 200, 500, 3000};
 
 // Copy for tracks minus one dimension
 const Int_t kNbinsT[kNdims-1] = { 460, 460, 560, 360, 360};
@@ -121,14 +121,10 @@ void ndmap_charges_tpc_grid(TString list_file, TString out_suffix,
  
     // 1 hist per plane per TPC. We also keep track of the number of tracks in
     // each eventual projection bin using TH2Is
-    //THnSparseD* h[kNplanes * kNTPCs];
+    THnSparseD* h[kNplanes * kNTPCs];
     THnSparseD* hTrack[kNplanes * kNTPCs];
     THnSparseD* hTrackFlag[kNplanes * kNTPCs]; // reset for each track
 
-    // Keep track of the 1d distributions in each multidimensional bin
-    std::unordered_map<Long64_t, TH1D*> spectra[kNplanes * kNTPCs];
-
-    TH2I* hi[kNplanes * kNTPCs * kNdims];
     for (unsigned i = 0; i < kNplanes * kNTPCs; i++) {
         //h[i] = new THnSparseD(Form("hwidth%d", i), "", kNdims, kNbins, kXmin, kXmax);
         hTrack[i] = new THnSparseD(Form("htrack%d", i), "", kNdims-1, kNbinsT, kXminT, kXmaxT);

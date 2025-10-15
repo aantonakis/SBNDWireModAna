@@ -35,6 +35,7 @@
 //#include "../../include/CalibrationStandard.h"
 #include "CalibrationStandard.h"
 #include "CalibNTupleInfo.h"
+#include "Angles.h"
 
 using ROOT::Math::XYZVector;
 
@@ -44,23 +45,20 @@ bool is_int(Float_t);
 
 //const UInt_t kNplanes = 3;
 //const UInt_t kNTPCs = 2;
-const UInt_t kNdims = 6;
+const UInt_t kNdims = 8;
 
 const Float_t kTrackCut = 60.; // cm
 
-const TString kLabels[kNdims] = { "x", "y", "z", "txz", "tyz", "integral"};
-const TString kTitles[kNdims] = { "x (cm)", "y (cm)", "z (cm)", 
-    "ThetaXZ (deg)", "ThetaYZ (deg)", "Integral"};
+//const TString kLabels[kNdims] = { "x", "y", "z", "txz", "tyz", "integral"};
+//const TString kTitles[kNdims] = { "x (cm)", "y (cm)", "z (cm)", 
+//    "ThetaXZ (deg)", "ThetaYZ (deg)", "Integral"};
 
 // Binnning --> Go as fine as possible and coarse grain later if needed
-//const Int_t kNbins[kNdims] = { 460, 460, 560, 360, 360, 2500};
-//const Double_t kXmin[kNdims] = { -230, -230, -30, -180, -180, 0};
-//const Double_t kXmax[kNdims] = { 230, 230, 530, 180, 180, 5000};
+// x, y, z, txz, tyz, integral, width, goodness
 
-// Copy for tracks minus one dimension
-const Int_t kNbinsT[kNdims-1] = { 460, 460, 560, 360, 360};
-const Double_t kXminT[kNdims-1] = { -230, -230, -30, -180, -180};
-const Double_t kXmaxT[kNdims-1] = { 230, 230, 530, 180, 180};
+const Int_t kNbins[kNdims] =   {  200,  200, 250, 72,  72, 1000, 200, 50};
+const Double_t kXmin[kNdims] = { -200, -200, 0,  -180, -180, 0,    0,   0};
+const Double_t kXmax[kNdims] = {  200,  200, 500, 180,  180, 3000, 20,  100};
 
 BetheBloch *muon_BB = new BetheBloch(13); // setup for muons
 SCECorr *sce_corr_mc = new SCECorr(false);
@@ -68,17 +66,25 @@ SCECorr *sce_corr_data = new SCECorr(true);
 YZCorr *yz_corr = new YZCorr();
 double lifetime = 100.; // mc default
 
+const UInt_t kNdimsP = 4;
 
-void ndmap_charges_tpc_grid(TString list_file, TString out_suffix,
+void single_dim_tpc_grid(TString list_file, TString out_suffix,
 
     // calibration options
     bool apply_sce = false,
     bool apply_yz = false,
     bool apply_elife = false,
     bool apply_recom = false,
-    bool isData = false
+    bool isData = false,
+    int dim = 0
 
 ) {
+
+    
+    const Int_t kNbinsP[kNdimsP] = { kNbins[dim],  1000, 200, 50};
+    const Double_t kXminP[kNdimsP] = { kXmin[dim], 0, 0, 0};
+    const Double_t kXmaxP[kNdimsP] = { kXmax[dim], 3000, 20, 100};
+
 
     // File List Management
     TChain *fChain = new TChain("caloskim/TrackCaloSkim");
@@ -98,8 +104,6 @@ void ndmap_charges_tpc_grid(TString list_file, TString out_suffix,
 
     AddFilesToChain(fileListPath, fChain);
     MyCalib my(fChain);
-
-    if(isData) lifetime = 35.;
 
     // SCE Calibration Initialization
     if (apply_sce) {
@@ -121,18 +125,10 @@ void ndmap_charges_tpc_grid(TString list_file, TString out_suffix,
  
     // 1 hist per plane per TPC. We also keep track of the number of tracks in
     // each eventual projection bin using TH2Is
-    //THnSparseD* h[kNplanes * kNTPCs];
-    THnSparseD* hTrack[kNplanes * kNTPCs];
-    THnSparseD* hTrackFlag[kNplanes * kNTPCs]; // reset for each track
+    THnSparseD* h[kNplanes * kNTPCs];
 
-    // Keep track of the 1d distributions in each multidimensional bin
-    std::unordered_map<Long64_t, TH1D*> spectra[kNplanes * kNTPCs];
-
-    TH2I* hi[kNplanes * kNTPCs * kNdims];
     for (unsigned i = 0; i < kNplanes * kNTPCs; i++) {
-        //h[i] = new THnSparseD(Form("hwidth%d", i), "", kNdims, kNbins, kXmin, kXmax);
-        hTrack[i] = new THnSparseD(Form("htrack%d", i), "", kNdims-1, kNbinsT, kXminT, kXmaxT);
-        hTrackFlag[i] = new THnSparseD(Form("htrack%d", i), "", kNdims-1, kNbinsT, kXminT, kXmaxT);
+      h[i] = new THnSparseD(Form("h1D%d", i), "", kNdimsP, kNbinsP, kXminP, kXmaxP);
     }
 
     size_t nevts = 0;
@@ -159,16 +155,10 @@ void ndmap_charges_tpc_grid(TString list_file, TString out_suffix,
             
       ROOT::Math::XYZVector trk_dir(*my.trk_dirx, *my.trk_diry, *my.trk_dirz);
 
-      // Reset N-dimensional Track Counter
-      for (unsigned i = 0; i < kNplanes * kNTPCs; i++) {
-        hTrackFlag[i]->Reset();
-      }
-
       for (UInt_t ip = 0; ip < kNplanes; ip++) {
         // calculate the plane dependent angles
-        float trk_thxz = -175.;
-	float trk_thyz = -175.;
-	unsigned short east_tpc = 0;
+        float trk_thxz = -180.;
+	float trk_thyz = -180.;
 
         for (size_t i = 0; i < my.x[ip].GetSize(); i++) {
           // skip nans
@@ -186,6 +176,7 @@ void ndmap_charges_tpc_grid(TString list_file, TString out_suffix,
           //std::cout << "Current TPC " << tpc[ip][i] << std::endl; 
 	  
 	  // Angle code goes here! TODO
+	  get_dir(trk_thxz, trk_thyz, my.tpc[ip][i], ip, *my.trk_dirx, *my.trk_diry, *my.trk_dirz);
           nevts++;
 
           XYZVector sp(my.x[ip][i], my.y[ip][i], my.z[ip][i]);
@@ -237,72 +228,37 @@ void ndmap_charges_tpc_grid(TString list_file, TString out_suffix,
           // ----------------- END CALIBRATION BLOCK ------------------------ //
                     
 
-          // TODO --> This does not correct the track direction (maybe use start and end positions since these are through-going)
-          //Double_t val[kNdims]  = {
-          //  sp_sce.X(), sp_sce.Y(), sp_sce.Z(), trk_thxz, trk_thyz, my.integral[ip][i]*total_q_corr 
-          //};
-
-          // For Track Counting
-          Double_t valT[kNdims-1]  = {
-            sp_sce.X(), sp_sce.Y(), sp_sce.Z(), trk_thxz, trk_thyz
+	  float dim_val = 0;
+	  if (dim == 0) dim_val = sp_sce.X();
+	  if (dim == 1) dim_val = sp_sce.Y();
+	  if (dim == 2) dim_val = sp_sce.Z();
+	  if (dim == 3) dim_val = trk_thxz;
+	  if (dim == 4) dim_val = trk_thyz;
+	  
+          Double_t val[kNdimsP]  = {
+            dim_val, my.integral[ip][i]*total_q_corr, my.width[ip][i], my.goodness[ip][i]
           };
 
           // select by TPC
           unsigned hit_idx = ip + kNplanes * my.tpc[ip][i];
 
-
-	  // New Functionality --> Get the global bin 
-	  Long64_t Gbin = hTrack[hit_idx]->GetBin(valT);
-	  auto it = spectra[hit_idx].find(Gbin);
-          if (it == spectra[hit_idx].end()) {
-            TString hname = Form("h_bin%lld", Gbin);
-            spectra[hit_idx][Gbin] = new TH1D(hname, hname, 2500, 0, 5000);
-          }
-          spectra[hit_idx][Gbin]->Fill(my.integral[ip][i]*total_q_corr);
-
-          //h[hit_idx]->Fill(val);
-          if (hTrackFlag[hit_idx]->GetBinContent(hTrackFlag[hit_idx]->GetBin(valT)) == 0) {
-            hTrackFlag[hit_idx]->Fill(valT);
-            hTrack[hit_idx]->Fill(valT);
-          }
+          h[hit_idx]->Fill(val);
         } // loop over hits
       } // loop over planes
     } // loop over events
         
-    //delete hTrackFlag;
-    for (unsigned i = 0; i < kNplanes * kNTPCs; i++) {
-      delete hTrackFlag[i];
-    }
-    
 
     printf("Processed %lu tracks (%lu hits)\n", track_counter, nevts);
     
     std::cout << "About to write histograms to the output file" << std::endl;
 
     TString output_rootfile_dir = getenv("OUTPUTROOT_PATH");
-    TString output_file_name = output_rootfile_dir + "/output_ndmap_charges_tpc_" + out_suffix + ".root";
+    TString output_file_name = output_rootfile_dir + "/output_single_dim_tpc_" + out_suffix + ".root";
     out_rootfile = new TFile(output_file_name, "RECREATE");
-    //out_rootfile -> cd();
+    out_rootfile -> cd();
     for (unsigned i = 0; i < kNplanes * kNTPCs; i++) {
 	std::cout << "Writing histograms for plane " << i << std::endl;
-        //h[i]->Write();
-        out_rootfile -> cd();
-        hTrack[i]->Write();
-	
-	// Directory for each plane --> 6 in total including each TPC
-	TDirectory* P = out_rootfile->mkdir(Form("Plane_%d", i));
-	P->cd();
-	std::cout << "Loop over spectra ..." << std::endl;
-    	// New Functionality --> unpack all the bins for future profiling
-	for (auto& [b, hist] : spectra[i]) {
-	  int group = b / 1000; // 1000 bins per dir
-	  TDirectory* d = P->GetDirectory(Form("group_%d", group));
-	  if (!d) d = P->mkdir(Form("group_%d", group));
-	  d->cd();
-          hist->Write();
-	  delete hist;
-	}
-	spectra[i].clear();
+        h[i]->Write();
     }
    
     out_rootfile -> Close();

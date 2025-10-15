@@ -35,6 +35,7 @@
 //#include "../../include/CalibrationStandard.h"
 #include "CalibrationStandard.h"
 #include "CalibNTupleInfo.h"
+#include "Angles.h"
 
 using ROOT::Math::XYZVector;
 
@@ -58,24 +59,18 @@ const TString kTitles[kNdims] = { "x (cm)", "y (cm)", "z (cm)",
 //const Double_t kXmax[kNdims] = { 230, 230, 530, 180, 180, 5000};
 
 // Copy for tracks minus one dimension
-const Int_t kNbinsT[kNdims-1] = { 460, 460, 560, 360, 360};
-const Double_t kXminT[kNdims-1] = { -230, -230, -30, -180, -180};
-const Double_t kXmaxT[kNdims-1] = { 230, 230, 530, 180, 180};
+const Int_t kNbinsT[kNdims-1] = { 400, 400, 500, 72, 72};
+const Double_t kXminT[kNdims-1] = { -200, -200, 0, -180, -180};
+const Double_t kXmaxT[kNdims-1] = { 200, 200, 500, 180, 180};
 
-BetheBloch *muon_BB = new BetheBloch(13); // setup for muons
 SCECorr *sce_corr_mc = new SCECorr(false);
 SCECorr *sce_corr_data = new SCECorr(true);
-YZCorr *yz_corr = new YZCorr();
-double lifetime = 100.; // mc default
 
 
-void ndmap_charges_tpc_grid(TString list_file, TString out_suffix,
+void ndmap_tracks_tpc_grid(TString list_file, TString out_suffix,
 
     // calibration options
     bool apply_sce = false,
-    bool apply_yz = false,
-    bool apply_elife = false,
-    bool apply_recom = false,
     bool isData = false
 
 ) {
@@ -99,7 +94,6 @@ void ndmap_charges_tpc_grid(TString list_file, TString out_suffix,
     AddFilesToChain(fileListPath, fChain);
     MyCalib my(fChain);
 
-    if(isData) lifetime = 35.;
 
     // SCE Calibration Initialization
     if (apply_sce) {
@@ -110,12 +104,6 @@ void ndmap_charges_tpc_grid(TString list_file, TString out_suffix,
 	sce_corr_mc -> ReadHistograms();
       }
     }
-   
-    // YZ Calibration Initialization
-    if (apply_yz) {
-      initialize_yz(yz_corr, isData);
-      yz_corr -> ReadHistograms();
-    }
 
     TH1::AddDirectory(0);
  
@@ -125,10 +113,6 @@ void ndmap_charges_tpc_grid(TString list_file, TString out_suffix,
     THnSparseD* hTrack[kNplanes * kNTPCs];
     THnSparseD* hTrackFlag[kNplanes * kNTPCs]; // reset for each track
 
-    // Keep track of the 1d distributions in each multidimensional bin
-    std::unordered_map<Long64_t, TH1D*> spectra[kNplanes * kNTPCs];
-
-    TH2I* hi[kNplanes * kNTPCs * kNdims];
     for (unsigned i = 0; i < kNplanes * kNTPCs; i++) {
         //h[i] = new THnSparseD(Form("hwidth%d", i), "", kNdims, kNbins, kXmin, kXmax);
         hTrack[i] = new THnSparseD(Form("htrack%d", i), "", kNdims-1, kNbinsT, kXminT, kXmaxT);
@@ -137,7 +121,6 @@ void ndmap_charges_tpc_grid(TString list_file, TString out_suffix,
 
     size_t nevts = 0;
     size_t track_counter = 0;
-
 
     int track_idx = 0;
     while (my.reader.Next()) {
@@ -186,6 +169,9 @@ void ndmap_charges_tpc_grid(TString list_file, TString out_suffix,
           //std::cout << "Current TPC " << tpc[ip][i] << std::endl; 
 	  
 	  // Angle code goes here! TODO
+	  //
+	  get_dir(trk_thxz, trk_thyz, my.tpc[ip][i], ip, *my.trk_dirx, *my.trk_diry, *my.trk_dirz);
+
           nevts++;
 
           XYZVector sp(my.x[ip][i], my.y[ip][i], my.z[ip][i]);
@@ -194,9 +180,6 @@ void ndmap_charges_tpc_grid(TString list_file, TString out_suffix,
                     
 	  XYZVector sp_sce;
 	  float sce_q_corr = 1.;
-	  float yz_q_corr = 1.;
-	  float elife_q_corr = 1.;
-	  float recom_q_corr = 1.;
 		   
           if (apply_sce) {
             if (isData) {
@@ -210,37 +193,9 @@ void ndmap_charges_tpc_grid(TString list_file, TString out_suffix,
           else {
             sp_sce = sp;
 	  }
-	  if (apply_yz) {
-            // Should probably be careful about using this without SCE corrections
-            yz_q_corr = yz_corr -> GetYZCorr(sp_sce, ip);
-
-	  }
-	  if (apply_elife) {
-	    if (isData) { 
-	      if (my.tpc[ip][i] == 0) {	
-    	        elife_q_corr = Lifetime_Correction(sp_sce.X(), 35.);
-	      }
-	      else {
-	        elife_q_corr = Lifetime_Correction(sp_sce.X(), 35.);
-	      }
-	    }
-	    else {
-	      elife_q_corr = Lifetime_Correction(sp_sce.X(), lifetime);
-            } 
-	  }
-          if (apply_recom) {
-            recom_q_corr = my_calib_const_corr(isData, ip);
-	  }
-	  float total_q_corr = sce_q_corr * yz_q_corr * elife_q_corr * recom_q_corr;
                    
-
           // ----------------- END CALIBRATION BLOCK ------------------------ //
                     
-
-          // TODO --> This does not correct the track direction (maybe use start and end positions since these are through-going)
-          //Double_t val[kNdims]  = {
-          //  sp_sce.X(), sp_sce.Y(), sp_sce.Z(), trk_thxz, trk_thyz, my.integral[ip][i]*total_q_corr 
-          //};
 
           // For Track Counting
           Double_t valT[kNdims-1]  = {
@@ -249,16 +204,6 @@ void ndmap_charges_tpc_grid(TString list_file, TString out_suffix,
 
           // select by TPC
           unsigned hit_idx = ip + kNplanes * my.tpc[ip][i];
-
-
-	  // New Functionality --> Get the global bin 
-	  Long64_t Gbin = hTrack[hit_idx]->GetBin(valT);
-	  auto it = spectra[hit_idx].find(Gbin);
-          if (it == spectra[hit_idx].end()) {
-            TString hname = Form("h_bin%lld", Gbin);
-            spectra[hit_idx][Gbin] = new TH1D(hname, hname, 2500, 0, 5000);
-          }
-          spectra[hit_idx][Gbin]->Fill(my.integral[ip][i]*total_q_corr);
 
           //h[hit_idx]->Fill(val);
           if (hTrackFlag[hit_idx]->GetBinContent(hTrackFlag[hit_idx]->GetBin(valT)) == 0) {
@@ -274,35 +219,18 @@ void ndmap_charges_tpc_grid(TString list_file, TString out_suffix,
       delete hTrackFlag[i];
     }
     
-
     printf("Processed %lu tracks (%lu hits)\n", track_counter, nevts);
     
     std::cout << "About to write histograms to the output file" << std::endl;
 
     TString output_rootfile_dir = getenv("OUTPUTROOT_PATH");
-    TString output_file_name = output_rootfile_dir + "/output_ndmap_charges_tpc_" + out_suffix + ".root";
+    TString output_file_name = output_rootfile_dir + "/output_ndmap_tracks_tpc_" + out_suffix + ".root";
     out_rootfile = new TFile(output_file_name, "RECREATE");
-    //out_rootfile -> cd();
+    out_rootfile -> cd();
     for (unsigned i = 0; i < kNplanes * kNTPCs; i++) {
 	std::cout << "Writing histograms for plane " << i << std::endl;
-        //h[i]->Write();
-        out_rootfile -> cd();
         hTrack[i]->Write();
 	
-	// Directory for each plane --> 6 in total including each TPC
-	TDirectory* P = out_rootfile->mkdir(Form("Plane_%d", i));
-	P->cd();
-	std::cout << "Loop over spectra ..." << std::endl;
-    	// New Functionality --> unpack all the bins for future profiling
-	for (auto& [b, hist] : spectra[i]) {
-	  int group = b / 1000; // 1000 bins per dir
-	  TDirectory* d = P->GetDirectory(Form("group_%d", group));
-	  if (!d) d = P->mkdir(Form("group_%d", group));
-	  d->cd();
-          hist->Write();
-	  delete hist;
-	}
-	spectra[i].clear();
     }
    
     out_rootfile -> Close();
