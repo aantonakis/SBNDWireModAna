@@ -73,13 +73,13 @@ float my_calib_const_corr(bool isData, int plane)
   if (isData) return 1.;
 
   if (plane == 0) {
-    return calib_const_mc0/calib_const_data0;
+    return calib_const_data0/calib_const_mc0;
   }
   else if (plane == 1) {
-    return calib_const_mc1/calib_const_data1;
+    return calib_const_data1/calib_const_mc1;
   }
   else if (plane == 2) {
-    return calib_const_mc2/calib_const_data2;
+    return calib_const_data2/calib_const_mc2;
   }
   else {
     std::cout << "Invalid use of Calib Constant Correction!!!" << std::endl;
