@@ -40,6 +40,7 @@ void profile_1d_itm_std_flist(const char* filelist, const char* output_file) {
 
     // initialize the array of multidimensional hists
     THnSparseD* h[kNplanes * kNTPCs] = {nullptr};
+    TH1D* h[kNplanes * kNTPCs] = {nullptr};
  
     std::string fname;
     int nfiles = 0;

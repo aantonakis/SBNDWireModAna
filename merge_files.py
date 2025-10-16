@@ -23,7 +23,7 @@ def merge_in_chunks(input_dir, output_dir, final_name, chunk_size=100, threads=8
     batch_files = []
 
     # Stage 1: merge each chunk
-    with ThreadPoolExecutor(max_workers=4) as executor:
+    with ThreadPoolExecutor(max_workers=64) as executor:
         futures = []
         for i in range(n_chunks):
             start, end = i * chunk_size, (i + 1) * chunk_size
