@@ -7,7 +7,6 @@
 #include "TH1F.h"
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
-#include "mylib.h"
 #include "Math/Vector3D.h"
 
 using ROOT::Math::XYZVector;
