@@ -27,7 +27,7 @@ const UInt_t kNplanes = 3;
 const UInt_t kNTPCs = 2;
 
 
-void profile_1d_itm_std(const char* input_file, const char* output_file) {
+void profile_1d_itm_std_corr(const char* input_file, const char* output_file) {
     
     gROOT->SetBatch(kTRUE);
 
@@ -48,7 +48,6 @@ void profile_1d_itm_std(const char* input_file, const char* output_file) {
 		
             // Get the histogram
             int idx = 3 * tpc + plane;
-	    std::cout << "Processing idx " << idx << std::endl;
             //std::string num_str = "hwidth"+std::to_string(idx); // convert int to string
             std::string num_str = "h1D"+std::to_string(idx); // convert int to string
             const char* cstr = num_str.c_str(); 
@@ -95,10 +94,10 @@ void profile_1d_itm_std(const char* input_file, const char* output_file) {
               iterative_truncated_mean_std_err(h_1d_w, -2, 1.75, 1.0e-4, itm_resultW);
               iterative_truncated_mean_std_err(h_1d_g, -2, 1.75, 1.0e-4, itm_resultG);
               
-	      h_charge->SetBinContent(i, itm_resultQ[0]);
-              h_charge->SetBinError(i, itm_resultQ[1]);
-	      //h_charge->SetBinContent(i, silly_corr(plane)*itm_resultQ[0]);
-              //h_charge->SetBinError(i, silly_corr(plane)*itm_resultQ[1]);
+	      //h_charge->SetBinContent(i, itm_resultQ[0]);
+              //h_charge->SetBinError(i, itm_resultQ[1]);
+	      h_charge->SetBinContent(i, silly_corr(plane)*itm_resultQ[0]);
+              h_charge->SetBinError(i, silly_corr(plane)*itm_resultQ[1]);
               h_width->SetBinContent(i, itm_resultW[0]);
               h_width->SetBinError(i, itm_resultW[1]);
               h_good->SetBinContent(i, itm_resultG[0]);

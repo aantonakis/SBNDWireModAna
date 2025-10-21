@@ -23,7 +23,7 @@ const UInt_t kNplanes = 3;
 const UInt_t kNTPCs = 2;
 
 
-void plot_width_vs_txz(const char* input, const char* output_file) {
+void plot_contours(const char* input, const char* output_file) {
 
     gROOT->SetBatch(kTRUE);
     
@@ -53,7 +53,14 @@ void plot_width_vs_txz(const char* input, const char* output_file) {
                 f->Close();
                 return;
             }
+
+
             TH2D* h_w = h->Projection(2, 0);
+	    //int max = h_w->GetMaximum();
+	    //int low = max/10
+
+	    //Double_t levels[6] = {10, 100, 1000, 10000, 100000, 1000000};  // for example, contour at z = 50
+            //h_w->SetContour(6, levels);
 	    h_w->SetStats(0);
 	    h_w->GetXaxis()->SetRangeUser(-90, 90);
 	    h_w->GetXaxis()->SetTitle("Reconstructed #theta_{xz} [degrees]");
@@ -63,7 +70,7 @@ void plot_width_vs_txz(const char* input, const char* output_file) {
 
 	    cw->cd();
 	    cw->SetLogz();
-	    h_w->Draw("Colz");
+	    h_w->Draw("CONT Z LIST");
 	    cw->Update();
 	    cw->Write();	    
 	   
