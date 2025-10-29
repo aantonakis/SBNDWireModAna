@@ -52,10 +52,10 @@ echo "@@ run"
 # ////////////// Simulation Jobs ///////////////////////////
 
 # all calibrations for mc and y, z
-#root -l -b -q "two_dim_tpc_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", true, true, true, true, false, 1, 2)" &> log_${nProcess}.log
+root -l -b -q "two_dim_tpc_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", true, true, true, true, false, 1, 2)" &> log_${nProcess}.log
 
 # all calibrations for mc and x, txz
-root -l -b -q "two_dim_tpc_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", true, true, true, true, false, 0, 3)" &> log_${nProcess}.log
+#root -l -b -q "two_dim_tpc_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", true, true, true, true, false, 0, 3)" &> log_${nProcess}.log
 
 # all calibrations for mc and x, txz
 #root -l -b -q "two_dim_tpc_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", true, true, true, true, true, 0, 3)" &> log_${nProcess}.log
@@ -63,6 +63,7 @@ root -l -b -q "two_dim_tpc_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\
 
 # DATA
 #root -l -b -q "two_dim_tpc_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", true, true, true, true, true, 1, 2)" &> log_${nProcess}.log
+#root -l -b -q "two_dim_tpc_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", true, true, true, true, true, 0, 3)" &> log_${nProcess}.log
 
 # //////////////////////////////////////////////////////////
 

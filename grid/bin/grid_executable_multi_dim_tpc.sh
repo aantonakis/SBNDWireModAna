@@ -29,7 +29,7 @@ cp ${filesFromSender}/setup_grid.sh .
 cp -r ${filesFromSender}/bin .
 cp -r ${filesFromSender}/include .
 cp -r ${filesFromSender}/include_wire .
-cp -r ${filesFromSender}/single_dim_tpc_grid.C .
+cp -r ${filesFromSender}/multi_dim_tpc_grid.C .
 
 echo "@@ make output/root"
 mkdir -p output/root
@@ -47,12 +47,11 @@ spack load ifdhc@2.6.20
 spack find root
 
 echo "@@ run"
-# inputs: apply_sce, apply_yz, apply_elife, apply_recomb, IsData, dim, tpc_sel, crt_sel, pathological_sel, lifetime_sel
+# inputs: apply_sce, apply_yz, apply_elife, apply_recomb, IsData, dim
 
 # ////////////// Simulation Jobs ///////////////////////////
 
-
-root -l -b -q "single_dim_tpc_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", true, true, false, false, true, 0, true, false, false, true)" &> log_${nProcess}.log
+root -l -b -q "multi_dim_tpc_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", false, false, false, false, false)" &> log_${nProcess}.log
 
 
 # //////////////////////////////////////////////////////////
@@ -66,11 +65,11 @@ echo "@@ outDir : "${outDir}
 echo "@@ ifdh  mkdir_p "${outDir}
 ifdh  mkdir_p ${outDir}
 
-outFILE=${thisOutputCreationDir}/output/root/output_single_dim_tpc_${nProcess}.root
+outFILE=${thisOutputCreationDir}/output/root/output_multi_dim_tpc_${nProcess}.root
 #outFILE=${thisOutputCreationDir}/${outDir}/output_ndhist_charges_tpc_crossers_${nProcess}.root
 if [ -f "$outFILE" ]; then
-  echo "ifdh cp ${thisOutputCreationDir}/output/root/output_single_dim_tpc_${nProcess}.root ${outDir}/${DFPREFIX}_${nProcess}.root"
-  ifdh cp ${thisOutputCreationDir}/output/root/output_single_dim_tpc_${nProcess}.root ${outDir}/${DFPREFIX}_${nProcess}.root
+  echo "ifdh cp ${thisOutputCreationDir}/output/root/output_multi_dim_tpc_${nProcess}.root ${outDir}/${DFPREFIX}_${nProcess}.root"
+  ifdh cp ${thisOutputCreationDir}/output/root/output_multi_dim_tpc_${nProcess}.root ${outDir}/${DFPREFIX}_${nProcess}.root
   echo "ifdh cp ${thisOutputCreationDir}/log_${nProcess}.log ${outDir}/log_${nProcess}.log"
   ifdh cp ${thisOutputCreationDir}/log_${nProcess}.log ${outDir}/log_${nProcess}.log
   echo "@@ Done!"
