@@ -28,7 +28,7 @@ const double data_fit[6][4] = {
     {2.0, 0.0001346297699449016, 5.3104087995690904e-08, 2.0336015614461746e-12},
     {2.0, 0.00020000491090600708, 2.699342528050437e-10, 1.9085723056853728e-11},
     {2.0, 0.00019524018982115983, -6.413359042285074e-09, 1.7073518257560365e-11},
-    {2.0,  0.00015509413830139263, 4.500935862965873e-08, 3.597088664976742e-12}
+    {2.0, 0.00015509413830139263, 4.500935862965873e-08, 3.597088664976742e-12}
 };
 
 bool txz_cut(float txz, float width, unsigned idx, bool isData) {
@@ -39,6 +39,7 @@ bool txz_cut(float txz, float width, unsigned idx, bool isData) {
       func->SetParameter(i, data_fit[idx][i]);
     }
     float y = func->Eval(txz);
+    delete func;
     if (width < y) return true;
     return false;
   }
@@ -47,6 +48,7 @@ bool txz_cut(float txz, float width, unsigned idx, bool isData) {
       func->SetParameter(i, mc_fit[idx][i]);
     }
     float y = func->Eval(txz);
+    delete func;
     if (width < y) return true;
     return false;
   }

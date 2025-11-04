@@ -51,7 +51,22 @@ echo "@@ run"
 
 # ////////////// Simulation Jobs ///////////////////////////
 
-root -l -b -q "multi_dim_tpc_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", false, false, false, false, false)" &> log_${nProcess}.log
+
+# inputs: apply_sce, apply_yz, apply_elife, apply_recomb, IsData, dim, tpc_sel, crt_sel, pathological_sel, lifetime_sel
+# dim = {x, y, z, txz, tyz, dq/dx, Q, width, goodness, pathological}
+
+# 0 = x
+# 1 = y
+# 2 = z
+# 3 = txw
+# 4 = tyz
+# 5 = dQdx
+# 6 = Q
+# 7 = width
+# 8 = Goodness
+# 9 = Pathological
+
+root -l -b -q "multi_dim_tpc_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", false, false, false, false, false, {0, 3, 6, 7, 9}, true, false, false, false)" &> log_${nProcess}.log
 
 
 # //////////////////////////////////////////////////////////

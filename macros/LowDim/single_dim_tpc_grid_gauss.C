@@ -38,28 +38,25 @@
 #include "Angles.h"
 
 #include "SelectionWire.h"
+#include "Fitting.h"
+
 
 using ROOT::Math::XYZVector;
 
 std::vector<TString> filenames_from_input(const TString&, int);
 TString basename_prefix(const TString&, const TString& prefix="", const TString& suffix="");
 bool is_int(Float_t);
-bool is_one_third(float x, float tol = 1e-3);
-bool is_two_thirds(float x, float tol = 1e-3);
+bool is_one_third(float x, float tol = 1e-5);
+bool is_two_thirds(float x, float tol = 1e-5);
 
+//const UInt_t kNplanes = 3;
+//const UInt_t kNTPCs = 2;
 const UInt_t kNdims = 10;
 
 const Float_t kTrackCut = 60.; // cm
 
-//const TString kLabels[kNdims] = { "x", "y", "z", "txz", "tyz", "integral"};
-//const TString kTitles[kNdims] = { "x (cm)", "y (cm)", "z (cm)", 
-//    "ThetaXZ (deg)", "ThetaYZ (deg)", "Integral"};
-
-// Binnning --> Go as fine as possible and coarse grain later if needed
-// x, y, z, txz, tyz, integral, width, goodness
-
 // Super Fine Width Binning for hit train testing
-const Int_t kNbins[kNdims] =   { 200,  200, 250, 180,  180, 1000, 1000, 1600, 500, 2};
+const Int_t kNbins[kNdims] =   { 200,  200, 250, 180,  180, 1000, 1000, 1600, 50, 2};
 
 //const Int_t kNbins[kNdims] =   {  200,  200, 250, 180,  180, 1000, 320, 50};
 const Double_t kXmin[kNdims] = { -200, -200, 0,  -90, -90, 0, 0,    0,   0,  0};
@@ -82,7 +79,7 @@ const UInt_t kG = 8; // Goodness
 
 const UInt_t kP = 9; // Pathological Hits (small width at large angles)
 
-void multi_dim_tpc_grid(TString list_file, TString out_suffix,
+void single_dim_tpc_grid_gauss(TString list_file, TString out_suffix,
 
     // calibration options
     bool apply_sce = false,
@@ -90,7 +87,7 @@ void multi_dim_tpc_grid(TString list_file, TString out_suffix,
     bool apply_elife = false,
     bool apply_recom = false,
     bool isData = false,
-    std::vector<int> dim = {0},
+    int  dim = 0,
 
     // Additional selections for special investigations 
     bool tpc_sel=true,
@@ -99,32 +96,8 @@ void multi_dim_tpc_grid(TString list_file, TString out_suffix,
     bool life_sel=false
 
 ) {
-
-    std::cout << std::endl;    
-    std::cout << "/---------------------------------------------------------------------------/" << std::endl;
-    std::cout << std::endl;    
-    std::cout << "Script Config:" << std::endl;
-    std::cout << "Is this Data? " << isData << std::endl;
-    std::cout << "Apply SCE: " << apply_sce << std::endl;
-    std::cout << "Apply YZ: " << apply_yz << std::endl;
-    std::cout << "Apply Lifetime: " << apply_elife << std::endl;
-    std::cout << "Apply Calibration Const./Recomb.: " << apply_recom << std::endl;
-    std::cout << std::endl;    
-    std::cout << "Selections: " << std::endl;
-    std::cout << "TPC Selection: " << tpc_sel << std::endl;
-    std::cout << "CRT Selection: " << crt_sel << std::endl;
-    std::cout << "Pathological Hit Selection: " << pathological_sel << std::endl;
-    std::cout << "Lifetime Calibration Selection: " << life_sel << std::endl;
-    std::cout << "DEBUG: kNplanes " << kNplanes << std::endl;
-    std::cout << std::endl;    
-    std::cout << "/---------------------------------------------------------------------------/" << std::endl;
-    std::cout << std::endl;    
-
-
-    // Add a pathological hit indicator at the end
-    //const Int_t kNbinsP[kNdimsP] = { kNbins[dim],  kNbins[kQ], kNbins[kW], kNbins[kG], kNbins[kP]};
-    //const Double_t kXminP[kNdimsP] = { kXmin[dim], kXmin[kQ], kXmin[kW], kXmin[kG], kXmin[kP]};
-    //const Double_t kXmaxP[kNdimsP] = { kXmax[dim], kXmax[kQ], kXmax[kW], kXmax[kG], kXmax[kP]};
+    // test with TPC0 PLANE 0
+    TH2D* h_result = new TH2D("h_result", "", 200, -200, 0, 1600, 0, 16);
 
 
     // File List Management
@@ -139,7 +112,7 @@ void multi_dim_tpc_grid(TString list_file, TString out_suffix,
     std::ifstream file(fileListPath.Data());  // Convert TString to const char*
     if (!file) {
       cout << "File does not exist: " << fileListPath << endl;
-      cout << "Exiting [multi_dim_tpc_grid]" << endl;
+      cout << "Exiting [ndhist_charges_tpc_crossers_grid]" << endl;
       return;
     }
 
@@ -150,8 +123,6 @@ void multi_dim_tpc_grid(TString list_file, TString out_suffix,
     if (apply_sce) {
       if (isData) {
 	sce_corr_data -> ReadHistograms();
-        // TODO DEBUG
-        std::cout << "DATA DEBUG: Read SCE Hists" << std::endl;
       }
       else {
 	sce_corr_mc -> ReadHistograms();
@@ -162,24 +133,15 @@ void multi_dim_tpc_grid(TString list_file, TString out_suffix,
     if (apply_yz) {
       initialize_yz(yz_corr, isData);
       yz_corr -> ReadHistograms();
-      std::cout << "DATA DEBUG: Initialized YZ" << std::endl;
     }
 
     TH1::AddDirectory(0);
+    TH2::AddDirectory(0);
  
-    // 1 hist per plane per TPC. We also keep track of the number of tracks in
-    // each eventual projection bin using TH2Is
-    THnSparseD* h[kNplanes * kNTPCs];
-
-    for (unsigned i = 0; i < kNplanes * kNTPCs; i++) {
-      THnSparseD* h_temp = new THnSparseD(Form("h%d", i), "", kNdims, kNbins, kXmin, kXmax);
-      //h[i] = new THnSparseD(Form("h1D%d", i), "", kNdimsP, kNbinsP, kXminP, kXmaxP);
-      h[i] = static_cast<THnSparseD*>( h_temp->Projection(dim.size(), dim.data()) );
-      h_temp->Delete();
-    }
 
     size_t nevts = 0;
     size_t track_counter = 0;
+
 
     int track_idx = 0;
     while (my.reader.Next()) {
@@ -229,23 +191,24 @@ void multi_dim_tpc_grid(TString list_file, TString out_suffix,
           // hit trains have widths in increments of exactly 0.5
           // skip hits from these
           if (is_int(my.width[ip][i] * 2)) continue;
+          //std::cout << "Current TPC " << tpc[ip][i] << std::endl; 
 	  
-	  // Angle code goes here!
+	  // Angle code goes here! TODO
 	  get_dir(trk_thxz, trk_thyz, my.tpc[ip][i], ip, *my.trk_dirx, *my.trk_diry, *my.trk_dirz);
           
           // cut out large angles for lifetime correction
           if ( (life_sel) && (std::abs(trk_thxz) > 49) ) continue;
-
-          // Hit trains also seem to come in thirds?	
+	
           float frac = my.width[ip][i] - std::floor(my.width[ip][i]);
 	  if (is_one_third(frac)) continue;
 	  if (is_two_thirds(frac)) continue;
 
 	  // ---------------------------------------------------------- //
 	  //
-	  // PATHOLOGICAL HIT Selection
+	  // PATHOLOGICAL HIT Selection --> TODO
 	  //
 
+	  // True = Reject! --> TODO TODO TODO TODO TODO
           Double_t PATHOLOGICAL = 0.5; // --> Set to 0.5 for NOT pathological	  
           
 	  unsigned IDX = ip + kNplanes * my.tpc[ip][i];
@@ -263,9 +226,7 @@ void multi_dim_tpc_grid(TString list_file, TString out_suffix,
 	  // Can remove pathological hits if needed
           if ( (pathological_sel) && (cut_pathological) ) continue;	  
 	  // ---------------------------------------------------------- //
-          
-          // TODO DATA DEBUG
-          //if (isData) std::cout << "DATA DEBUG: Selected track --> entering calibration block" << std::endl;
+
 
           nevts++;
 
@@ -316,51 +277,51 @@ void multi_dim_tpc_grid(TString list_file, TString out_suffix,
                    
 
           // ----------------- END CALIBRATION BLOCK ------------------------ //
-          std::vector<double> vals;
-          vals.reserve(dim.size());
+ 
 
           float dqdx_hit = my.dqdx[ip][i]*total_q_corr;
 
-          for (int v = 0; v < dim.size(); ++v) {
-	    double dim_val = 0;
-	    if (dim[v] == 0) dim_val = sp_sce.X();
-	    if (dim[v] == 1) dim_val = sp_sce.Y();
-	    if (dim[v] == 2) dim_val = sp_sce.Z();
-	    if (dim[v] == 3) dim_val = trk_thxz;
-	    if (dim[v] == 4) dim_val = trk_thyz;
-	    if (dim[v] == 5) dim_val = dqdx_hit;
-	    if (dim[v] == 6) dim_val = my.integral[ip][i]*total_q_corr;
-	    if (dim[v] == 7) dim_val = my.width[ip][i];
-	    if (dim[v] == 8) dim_val = my.goodness[ip][i];
-	    if (dim[v] == 9) dim_val = PATHOLOGICAL;
-            vals.push_back(dim_val);
-	  }
-
-          // select by TPC
-          unsigned hit_idx = ip + kNplanes * my.tpc[ip][i];
-
-          h[hit_idx]->Fill(vals.data());
+	  float dim_val = 0;
+	  if (dim == 0) dim_val = sp_sce.X();
+	  if (dim == 1) dim_val = sp_sce.Y();
+	  if (dim == 2) dim_val = sp_sce.Z();
+	  if (dim == 3) dim_val = trk_thxz;
+	  if (dim == 4) dim_val = trk_thyz;
+	  if (dim == 5) dim_val = dqdx_hit;
+          
+          if ((my.tpc[ip][i] == 0) && (ip == 0)) h_result->Fill(sp_sce.X(), my.width[ip][i]);
 
         } // loop over hits
       } // loop over planes
     } // loop over events
-   
-    std::cout << "Finished the event loop ..." << std::endl;       
+        
 
     printf("Processed %lu tracks (%lu hits)\n", track_counter, nevts);
     
     std::cout << "About to write histograms to the output file" << std::endl;
 
     TString output_rootfile_dir = getenv("OUTPUTROOT_PATH");
-    TString output_file_name = output_rootfile_dir + "/output_multi_dim_tpc_" + out_suffix + ".root";
+    TString output_file_name = output_rootfile_dir + "/output_single_dim_tpc_gauss_" + out_suffix + ".root";
     out_rootfile = new TFile(output_file_name, "RECREATE");
     out_rootfile -> cd();
-    for (unsigned i = 0; i < kNplanes * kNTPCs; i++) {
-	std::cout << "Writing histograms for plane " << i << std::endl;
-        h[i]->Write();
+     
+    TH2D* h_itm = (TH2D*)h_result->Clone("h_itm");
+    h_itm->Reset();
+    // Loop over the bins and compute the ITM result
+    for (int i = 1; i < h_result->GetNbinsX()+1; ++i) {
+    
+ 
+      TH1D* h_1d_w = h_result->ProjectionY(Form("proj%d", i), i, i);                                                                                                                                                                                       if (h_1d_w->Integral() < 1) continue;
+
+      Double_t itm_resultW[2];                                                                                                                                                                                                                             
+      iterative_truncated_mean_std_err(h_1d_w, -2, 1.75, 1.0e-4, itm_resultW);
+
+      h_itm->Fill(h_itm->GetXaxis()->GetBinCenter(i), itm_resultW[0]);
+
     }
-   
-    out_rootfile->Close();
+    h_itm->Write();  
+
+    out_rootfile -> Close();
 
 }
 
@@ -400,11 +361,11 @@ bool is_int(Float_t val) {
     return std::abs(roundf(val) - val) < 0.00001f;
 }
 
-bool is_one_third(float x, float tol = 1e-3) {
+bool is_one_third(float x, float tol = 1e-5) {
     return std::fabs(x - 1.0f/3.0f) < tol;
 }
 
-bool is_two_thirds(float x, float tol = 1e-3) {
+bool is_two_thirds(float x, float tol = 1e-5) {
     return std::fabs(x - 2.0f/3.0f) < tol;
 }
 

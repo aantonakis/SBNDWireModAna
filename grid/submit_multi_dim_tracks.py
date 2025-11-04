@@ -33,7 +33,7 @@ def run_grid(inputfiles):
     # 2) Define MasterJobDir -- produce grid job submission scripts in $SBNDCALIB_GRID_OUT_DIR
     SBNDCALIB_GRID_OUT_DIR = os.environ['SBNDCALIB_GRID_OUT_DIR']
     MasterJobDir = SBNDCALIB_GRID_OUT_DIR + "/logs/" + args.output + "__" + timestamp + "_log"
-    OutputDir = SBNDCALIB_GRID_OUT_DIR + "/multi_dim_tpc/" + args.output + "__" + timestamp
+    OutputDir = SBNDCALIB_GRID_OUT_DIR + "/multi_dim_tracks/" + args.output + "__" + timestamp
     os.system('mkdir -p ' + MasterJobDir)
 
     # 3) grid job is based on number of files
@@ -59,8 +59,8 @@ def run_grid(inputfiles):
             this_list.write('%s\n'%(flist[i_f]))
         this_list.close()
         
-    #os.system('cp ./grid/bin/grid_executable_ndhist_charges_tpc_crossers.sh %s' %MasterJobDir)
-    os.system('cp ../grid/bin/grid_executable_multi_dim_tpc.sh %s' %MasterJobDir)
+    #os.system('cp ./grid/bin/grid_executable_ndhist_charges_tracks_crossers.sh %s' %MasterJobDir)
+    os.system('cp ../grid/bin/grid_executable_multi_dim_tracks.sh %s' %MasterJobDir)
 
     # 5) copy scripts for running run_lifetime_loop.C
     WIREMOD_WORKING_DIR = os.environ['WIREMOD_WORKING_DIR']
@@ -70,7 +70,7 @@ def run_grid(inputfiles):
     #cp_setup = "cp " + CALIB_WORKING_DIR + "/setup.sh " + MasterJobDir
     cp_setup = "cp " + WIREMOD_WORKING_DIR + "/setup_grid.sh " + MasterJobDir
     cp_BashColorSets = "cp -r " + CALIB_WORKING_DIR + "/bin " + MasterJobDir
-    cp_script = "cp " + WIREMOD_WORKING_DIR + "/macros/HighDim/multi_dim_tpc_grid.C " + MasterJobDir
+    cp_script = "cp " + WIREMOD_WORKING_DIR + "/macros/HighDim/multi_dim_tracks_grid.C " + MasterJobDir
     os.system(cp_include)
     os.system(cp_include2)
     os.system(cp_setup)
@@ -98,7 +98,7 @@ def run_grid(inputfiles):
 -N %d \\
 --disk 100GB \\
 --expected-lifetime 10h \\
-"file://$(pwd)/grid_executable_multi_dim_tpc.sh" \\
+"file://$(pwd)/grid_executable_multi_dim_tracks.sh" \\
 "%s" \\
 "%s"'''%(ngrid,OutputDir,args.output)
 

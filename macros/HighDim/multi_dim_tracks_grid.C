@@ -82,7 +82,7 @@ const UInt_t kG = 8; // Goodness
 
 const UInt_t kP = 9; // Pathological Hits (small width at large angles)
 
-void multi_dim_tpc_grid(TString list_file, TString out_suffix,
+void multi_dim_tracks_grid(TString list_file, TString out_suffix,
 
     // calibration options
     bool apply_sce = false,
@@ -170,12 +170,20 @@ void multi_dim_tpc_grid(TString list_file, TString out_suffix,
     // 1 hist per plane per TPC. We also keep track of the number of tracks in
     // each eventual projection bin using TH2Is
     THnSparseD* h[kNplanes * kNTPCs];
+    THnSparseD* hTracks[kNplanes * kNTPCs];
+    THnSparseD* hTrackFlags[kNplanes * kNTPCs];
 
     for (unsigned i = 0; i < kNplanes * kNTPCs; i++) {
       THnSparseD* h_temp = new THnSparseD(Form("h%d", i), "", kNdims, kNbins, kXmin, kXmax);
+      THnSparseD* h_temp_trk = new THnSparseD(Form("hTrack%d", i), "", kNdims, kNbins, kXmin, kXmax);
+      THnSparseD* h_temp_trk_flag = new THnSparseD(Form("hTrackFlags%d", i), "", kNdims, kNbins, kXmin, kXmax);
       //h[i] = new THnSparseD(Form("h1D%d", i), "", kNdimsP, kNbinsP, kXminP, kXmaxP);
       h[i] = static_cast<THnSparseD*>( h_temp->Projection(dim.size(), dim.data()) );
+      hTracks[i] = static_cast<THnSparseD*>( h_temp_trk->Projection(dim.size(), dim.data()) );
+      hTrackFlags[i] = static_cast<THnSparseD*>( h_temp_trk_flag->Projection(dim.size(), dim.data()) );
       h_temp->Delete();
+      h_temp_trk->Delete();
+      h_temp_trk_flag->Delete();
     }
 
     size_t nevts = 0;
@@ -208,6 +216,11 @@ void multi_dim_tpc_grid(TString list_file, TString out_suffix,
       if (my.rr[2][nhits - 1] < kTrackCut) continue;
 
       track_counter++;
+
+      // Reset N-dimensional Track Counter
+      for (unsigned i = 0; i < kNplanes * kNTPCs; i++) {
+        hTrackFlags[i]->Reset();
+      }
             
       ROOT::Math::XYZVector trk_dir(*my.trk_dirx, *my.trk_diry, *my.trk_dirz);
 
@@ -339,12 +352,21 @@ void multi_dim_tpc_grid(TString list_file, TString out_suffix,
           // select by TPC
           unsigned hit_idx = ip + kNplanes * my.tpc[ip][i];
 
+          // Fill the results
           h[hit_idx]->Fill(vals.data());
+          if (hTrackFlags[hit_idx]->GetBinContent(hTrackFlags[hit_idx]->GetBin(vals.data())) == 0) {
+            hTrackFlags[hit_idx]->Fill(vals.data());
+            hTracks[hit_idx]->Fill(vals.data());
+          }
 
         } // loop over hits
       } // loop over planes
     } // loop over events
    
+    //delete hTrackFlag;
+    for (unsigned i = 0; i < kNplanes * kNTPCs; i++) {
+      delete hTrackFlags[i];
+    }
     std::cout << "Finished the event loop ..." << std::endl;       
 
     printf("Processed %lu tracks (%lu hits)\n", track_counter, nevts);
@@ -352,12 +374,13 @@ void multi_dim_tpc_grid(TString list_file, TString out_suffix,
     std::cout << "About to write histograms to the output file" << std::endl;
 
     TString output_rootfile_dir = getenv("OUTPUTROOT_PATH");
-    TString output_file_name = output_rootfile_dir + "/output_multi_dim_tpc_" + out_suffix + ".root";
+    TString output_file_name = output_rootfile_dir + "/output_multi_dim_tracks_" + out_suffix + ".root";
     out_rootfile = new TFile(output_file_name, "RECREATE");
     out_rootfile -> cd();
     for (unsigned i = 0; i < kNplanes * kNTPCs; i++) {
 	std::cout << "Writing histograms for plane " << i << std::endl;
         h[i]->Write();
+        hTracks[i]->Write();
     }
    
     out_rootfile->Close();

@@ -44,9 +44,11 @@ using ROOT::Math::XYZVector;
 std::vector<TString> filenames_from_input(const TString&, int);
 TString basename_prefix(const TString&, const TString& prefix="", const TString& suffix="");
 bool is_int(Float_t);
-bool is_one_third(float x, float tol = 1e-3);
-bool is_two_thirds(float x, float tol = 1e-3);
+bool is_one_third(float x, float tol = 1e-5);
+bool is_two_thirds(float x, float tol = 1e-5);
 
+//const UInt_t kNplanes = 3;
+//const UInt_t kNTPCs = 2;
 const UInt_t kNdims = 10;
 
 const Float_t kTrackCut = 60.; // cm
@@ -82,7 +84,7 @@ const UInt_t kG = 8; // Goodness
 
 const UInt_t kP = 9; // Pathological Hits (small width at large angles)
 
-void multi_dim_tpc_grid(TString list_file, TString out_suffix,
+void TEST(TString list_file, TString out_suffix,
 
     // calibration options
     bool apply_sce = false,
@@ -115,7 +117,6 @@ void multi_dim_tpc_grid(TString list_file, TString out_suffix,
     std::cout << "CRT Selection: " << crt_sel << std::endl;
     std::cout << "Pathological Hit Selection: " << pathological_sel << std::endl;
     std::cout << "Lifetime Calibration Selection: " << life_sel << std::endl;
-    std::cout << "DEBUG: kNplanes " << kNplanes << std::endl;
     std::cout << std::endl;    
     std::cout << "/---------------------------------------------------------------------------/" << std::endl;
     std::cout << std::endl;    
@@ -139,7 +140,7 @@ void multi_dim_tpc_grid(TString list_file, TString out_suffix,
     std::ifstream file(fileListPath.Data());  // Convert TString to const char*
     if (!file) {
       cout << "File does not exist: " << fileListPath << endl;
-      cout << "Exiting [multi_dim_tpc_grid]" << endl;
+      cout << "Exiting [ndhist_charges_tpc_crossers_grid]" << endl;
       return;
     }
 
@@ -172,7 +173,7 @@ void multi_dim_tpc_grid(TString list_file, TString out_suffix,
     THnSparseD* h[kNplanes * kNTPCs];
 
     for (unsigned i = 0; i < kNplanes * kNTPCs; i++) {
-      THnSparseD* h_temp = new THnSparseD(Form("h%d", i), "", kNdims, kNbins, kXmin, kXmax);
+      THnSparseD* h_temp = new THnSparseD(Form("h1D%d", i), "", kNdims, kNbins, kXmin, kXmax);
       //h[i] = new THnSparseD(Form("h1D%d", i), "", kNdimsP, kNbinsP, kXminP, kXmaxP);
       h[i] = static_cast<THnSparseD*>( h_temp->Projection(dim.size(), dim.data()) );
       h_temp->Delete();
@@ -180,6 +181,7 @@ void multi_dim_tpc_grid(TString list_file, TString out_suffix,
 
     size_t nevts = 0;
     size_t track_counter = 0;
+
 
     int track_idx = 0;
     while (my.reader.Next()) {
@@ -229,14 +231,14 @@ void multi_dim_tpc_grid(TString list_file, TString out_suffix,
           // hit trains have widths in increments of exactly 0.5
           // skip hits from these
           if (is_int(my.width[ip][i] * 2)) continue;
+          //std::cout << "Current TPC " << tpc[ip][i] << std::endl; 
 	  
 	  // Angle code goes here!
 	  get_dir(trk_thxz, trk_thyz, my.tpc[ip][i], ip, *my.trk_dirx, *my.trk_diry, *my.trk_dirz);
           
           // cut out large angles for lifetime correction
           if ( (life_sel) && (std::abs(trk_thxz) > 49) ) continue;
-
-          // Hit trains also seem to come in thirds?	
+	
           float frac = my.width[ip][i] - std::floor(my.width[ip][i]);
 	  if (is_one_third(frac)) continue;
 	  if (is_two_thirds(frac)) continue;
@@ -333,8 +335,11 @@ void multi_dim_tpc_grid(TString list_file, TString out_suffix,
 	    if (dim[v] == 7) dim_val = my.width[ip][i];
 	    if (dim[v] == 8) dim_val = my.goodness[ip][i];
 	    if (dim[v] == 9) dim_val = PATHOLOGICAL;
-            vals.push_back(dim_val);
 	  }
+          //Double_t val[kNdimsP]  = {
+          //  dim_val, my.integral[ip][i]*total_q_corr, my.width[ip][i], my.goodness[ip][i], PATHOLOGICAL
+          //};
+
 
           // select by TPC
           unsigned hit_idx = ip + kNplanes * my.tpc[ip][i];
@@ -352,7 +357,7 @@ void multi_dim_tpc_grid(TString list_file, TString out_suffix,
     std::cout << "About to write histograms to the output file" << std::endl;
 
     TString output_rootfile_dir = getenv("OUTPUTROOT_PATH");
-    TString output_file_name = output_rootfile_dir + "/output_multi_dim_tpc_" + out_suffix + ".root";
+    TString output_file_name = output_rootfile_dir + "/output_single_dim_tpc_" + out_suffix + ".root";
     out_rootfile = new TFile(output_file_name, "RECREATE");
     out_rootfile -> cd();
     for (unsigned i = 0; i < kNplanes * kNTPCs; i++) {
@@ -400,11 +405,11 @@ bool is_int(Float_t val) {
     return std::abs(roundf(val) - val) < 0.00001f;
 }
 
-bool is_one_third(float x, float tol = 1e-3) {
+bool is_one_third(float x, float tol = 1e-5) {
     return std::fabs(x - 1.0f/3.0f) < tol;
 }
 
-bool is_two_thirds(float x, float tol = 1e-3) {
+bool is_two_thirds(float x, float tol = 1e-5) {
     return std::fabs(x - 2.0f/3.0f) < tol;
 }
 

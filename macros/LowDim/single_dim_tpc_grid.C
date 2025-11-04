@@ -61,7 +61,7 @@ const Float_t kTrackCut = 60.; // cm
 // x, y, z, txz, tyz, integral, width, goodness
 
 // Super Fine Width Binning for hit train testing
-const Int_t kNbins[kNdims] =   { 200,  200, 250, 180,  180, 1000, 1000, 1600, 50, 2};
+const Int_t kNbins[kNdims] =   { 200,  200, 250, 180,  180, 1000, 1000, 1600, 500, 2};
 
 //const Int_t kNbins[kNdims] =   {  200,  200, 250, 180,  180, 1000, 320, 50};
 const Double_t kXmin[kNdims] = { -200, -200, 0,  -90, -90, 0, 0,    0,   0,  0};
@@ -102,6 +102,26 @@ void single_dim_tpc_grid(TString list_file, TString out_suffix,
 
 ) {
 
+    std::cout << std::endl;    
+    std::cout << "/---------------------------------------------------------------------------/" << std::endl;
+    std::cout << std::endl;    
+    std::cout << "Script Config:" << std::endl;
+    std::cout << "Is this Data? " << isData << std::endl;
+    std::cout << "Apply SCE: " << apply_sce << std::endl;
+    std::cout << "Apply YZ: " << apply_yz << std::endl;
+    std::cout << "Apply Lifetime: " << apply_elife << std::endl;
+    std::cout << "Apply Calibration Const./Recomb.: " << apply_recom << std::endl;
+    std::cout << std::endl;    
+    std::cout << "Selections: " << std::endl;
+    std::cout << "TPC Selection: " << tpc_sel << std::endl;
+    std::cout << "CRT Selection: " << crt_sel << std::endl;
+    std::cout << "Pathological Hit Selection: " << pathological_sel << std::endl;
+    std::cout << "Lifetime Calibration Selection: " << life_sel << std::endl;
+    std::cout << std::endl;    
+    std::cout << "/---------------------------------------------------------------------------/" << std::endl;
+    std::cout << std::endl;    
+
+
     // Add a pathological hit indicator at the end
     const Int_t kNbinsP[kNdimsP] = { kNbins[dim],  kNbins[kQ], kNbins[kW], kNbins[kG], kNbins[kP]};
     const Double_t kXminP[kNdimsP] = { kXmin[dim], kXmin[kQ], kXmin[kW], kXmin[kG], kXmin[kP]};
@@ -131,6 +151,8 @@ void single_dim_tpc_grid(TString list_file, TString out_suffix,
     if (apply_sce) {
       if (isData) {
 	sce_corr_data -> ReadHistograms();
+        // TODO DEBUG
+        std::cout << "DATA DEBUG: Read SCE Hists" << std::endl;
       }
       else {
 	sce_corr_mc -> ReadHistograms();
@@ -141,6 +163,7 @@ void single_dim_tpc_grid(TString list_file, TString out_suffix,
     if (apply_yz) {
       initialize_yz(yz_corr, isData);
       yz_corr -> ReadHistograms();
+      std::cout << "DATA DEBUG: Initialized YZ" << std::endl;
     }
 
     TH1::AddDirectory(0);
@@ -207,7 +230,7 @@ void single_dim_tpc_grid(TString list_file, TString out_suffix,
           if (is_int(my.width[ip][i] * 2)) continue;
           //std::cout << "Current TPC " << tpc[ip][i] << std::endl; 
 	  
-	  // Angle code goes here! TODO
+	  // Angle code goes here!
 	  get_dir(trk_thxz, trk_thyz, my.tpc[ip][i], ip, *my.trk_dirx, *my.trk_diry, *my.trk_dirz);
           
           // cut out large angles for lifetime correction
@@ -219,10 +242,9 @@ void single_dim_tpc_grid(TString list_file, TString out_suffix,
 
 	  // ---------------------------------------------------------- //
 	  //
-	  // PATHOLOGICAL HIT Selection --> TODO
+	  // PATHOLOGICAL HIT Selection
 	  //
 
-	  // True = Reject! --> TODO TODO TODO TODO TODO
           Double_t PATHOLOGICAL = 0.5; // --> Set to 0.5 for NOT pathological	  
           
 	  unsigned IDX = ip + kNplanes * my.tpc[ip][i];
@@ -240,7 +262,9 @@ void single_dim_tpc_grid(TString list_file, TString out_suffix,
 	  // Can remove pathological hits if needed
           if ( (pathological_sel) && (cut_pathological) ) continue;	  
 	  // ---------------------------------------------------------- //
-
+          
+          // TODO DATA DEBUG
+          //if (isData) std::cout << "DATA DEBUG: Selected track --> entering calibration block" << std::endl;
 
           nevts++;
 
@@ -321,7 +345,8 @@ void single_dim_tpc_grid(TString list_file, TString out_suffix,
         } // loop over hits
       } // loop over planes
     } // loop over events
-        
+   
+    std::cout << "Finished the event loop ..." << std::endl;       
 
     printf("Processed %lu tracks (%lu hits)\n", track_counter, nevts);
     
@@ -336,7 +361,7 @@ void single_dim_tpc_grid(TString list_file, TString out_suffix,
         h[i]->Write();
     }
    
-    out_rootfile -> Close();
+    out_rootfile->Close();
 
 }
 

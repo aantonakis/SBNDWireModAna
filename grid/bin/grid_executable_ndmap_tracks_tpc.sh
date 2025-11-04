@@ -65,10 +65,10 @@ echo "@@ run"
 # ////////////// Simulation Jobs ///////////////////////////
 
 # MC with SCE
-root -l -b -q "ndmap_tracks_tpc_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", true, false)" &> log_${nProcess}.log
+#root -l -b -q "ndmap_tracks_tpc_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", true, false)" &> log_${nProcess}.log
 
 # Data with SCE
-#root -l -b -q "ndmap_tracks_tpc_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", true, true)" &> log_${nProcess}.log
+root -l -b -q "ndmap_tracks_tpc_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", true, true)" &> log_${nProcess}.log
 
 
 
