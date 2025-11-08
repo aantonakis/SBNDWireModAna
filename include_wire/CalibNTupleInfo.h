@@ -32,6 +32,7 @@ struct MyCalib {
 
     TTreeReaderArray<unsigned short> tpc[kNplanes];
     TTreeReaderArray<float> goodness[kNplanes];
+    TTreeReaderArray<int> mult[kNplanes];
 
     TTreeReaderArray<float> x[kNplanes];
     TTreeReaderArray<float> y[kNplanes];
@@ -59,7 +60,6 @@ struct MyCalib {
 	  trk_diry(reader, "trk.dir.y"),
 	  trk_dirz(reader, "trk.dir.z"),
 
-
 	  // Arrays	
 	  tpc{              
 	    TTreeReaderArray<unsigned short>(reader, "trk.hits0.h.tpc"),
@@ -71,6 +71,11 @@ struct MyCalib {
             TTreeReaderArray<float>(reader, "trk.hits0.h.goodness"),
             TTreeReaderArray<float>(reader, "trk.hits1.h.goodness"),
             TTreeReaderArray<float>(reader, "trk.hits2.h.goodness")
+	  },
+	  mult{
+            TTreeReaderArray<int>(reader, "trk.hits0.h.mult"),
+            TTreeReaderArray<int>(reader, "trk.hits1.h.mult"),
+            TTreeReaderArray<int>(reader, "trk.hits2.h.mult")
 	  },
 	  
   	  x{

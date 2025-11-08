@@ -29,7 +29,7 @@ cp ${filesFromSender}/setup_grid.sh .
 cp -r ${filesFromSender}/bin .
 cp -r ${filesFromSender}/include .
 cp -r ${filesFromSender}/include_wire .
-cp -r ${filesFromSender}/multi_dim_tracks_grid.C .
+cp -r ${filesFromSender}/merge_hists_grid.C .
 
 echo "@@ make output/root"
 mkdir -p output/root
@@ -68,7 +68,7 @@ echo "@@ run"
 # 8 = Goodness
 # 9 = Pathological
 
-root -l -b -q "multi_dim_tracks_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", true, true, true, true, true, {0, 3, 6, 7, 9}, true, false, false, false)" &> log_${nProcess}.log
+root -l -b -q "merge_hists_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", {0, 1, 2})" &> log_${nProcess}.log
 
 
 # //////////////////////////////////////////////////////////
@@ -82,11 +82,11 @@ echo "@@ outDir : "${outDir}
 echo "@@ ifdh  mkdir_p "${outDir}
 ifdh  mkdir_p ${outDir}
 
-outFILE=${thisOutputCreationDir}/output/root/output_multi_dim_tracks_${nProcess}.root
+outFILE=${thisOutputCreationDir}/output/root/output_merge_hists_${nProcess}.root
 #outFILE=${thisOutputCreationDir}/${outDir}/output_ndhist_charges_tracks_crossers_${nProcess}.root
 if [ -f "$outFILE" ]; then
-  echo "ifdh cp ${thisOutputCreationDir}/output/root/output_multi_dim_tracks_${nProcess}.root ${outDir}/${DFPREFIX}_${nProcess}.root"
-  ifdh cp ${thisOutputCreationDir}/output/root/output_multi_dim_tracks_${nProcess}.root ${outDir}/${DFPREFIX}_${nProcess}.root
+  echo "ifdh cp ${thisOutputCreationDir}/output/root/output_merge_hists_${nProcess}.root ${outDir}/${DFPREFIX}_${nProcess}.root"
+  ifdh cp ${thisOutputCreationDir}/output/root/output_merge_hists_${nProcess}.root ${outDir}/${DFPREFIX}_${nProcess}.root
   echo "ifdh cp ${thisOutputCreationDir}/log_${nProcess}.log ${outDir}/log_${nProcess}.log"
   ifdh cp ${thisOutputCreationDir}/log_${nProcess}.log ${outDir}/log_${nProcess}.log
   echo "@@ Done!"

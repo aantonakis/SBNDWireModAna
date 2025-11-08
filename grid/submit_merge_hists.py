@@ -33,7 +33,7 @@ def run_grid(inputfiles):
     # 2) Define MasterJobDir -- produce grid job submission scripts in $SBNDCALIB_GRID_OUT_DIR
     SBNDCALIB_GRID_OUT_DIR = os.environ['SBNDCALIB_GRID_OUT_DIR']
     MasterJobDir = SBNDCALIB_GRID_OUT_DIR + "/logs/" + args.output + "__" + timestamp + "_log"
-    OutputDir = SBNDCALIB_GRID_OUT_DIR + "/multi_dim_tracks/" + args.output + "__" + timestamp
+    OutputDir = SBNDCALIB_GRID_OUT_DIR + "/merge_hists/" + args.output + "__" + timestamp
     os.system('mkdir -p ' + MasterJobDir)
 
     # 3) grid job is based on number of files
@@ -60,7 +60,7 @@ def run_grid(inputfiles):
         this_list.close()
         
     #os.system('cp ./grid/bin/grid_executable_ndhist_charges_tracks_crossers.sh %s' %MasterJobDir)
-    os.system('cp ../grid/bin/grid_executable_multi_dim_tracks.sh %s' %MasterJobDir)
+    os.system('cp ../grid/bin/grid_executable_merge_hists.sh %s' %MasterJobDir)
 
     # 5) copy scripts for running run_lifetime_loop.C
     WIREMOD_WORKING_DIR = os.environ['WIREMOD_WORKING_DIR']
@@ -70,7 +70,7 @@ def run_grid(inputfiles):
     #cp_setup = "cp " + CALIB_WORKING_DIR + "/setup.sh " + MasterJobDir
     cp_setup = "cp " + WIREMOD_WORKING_DIR + "/setup_grid.sh " + MasterJobDir
     cp_BashColorSets = "cp -r " + CALIB_WORKING_DIR + "/bin " + MasterJobDir
-    cp_script = "cp " + WIREMOD_WORKING_DIR + "/macros/HighDim/multi_dim_tracks_grid.C " + MasterJobDir
+    cp_script = "cp " + WIREMOD_WORKING_DIR + "/macros/Merge/merge_hists_grid.C " + MasterJobDir
     os.system(cp_include)
     os.system(cp_include2)
     os.system(cp_setup)
@@ -91,14 +91,14 @@ def run_grid(inputfiles):
 -e LC_ALL=C \\
 --role=Analysis \\
 --resource-provides="usage_model=DEDICATED,OPPORTUNISTIC" \\
---lines '+FERMIHTC_AutoRelease=True' --lines '+FERMIHTC_GraceMemory=3000' --lines '+FERMIHTC_GraceLifetime=3600' \\
+--lines '+FERMIHTC_AutoRelease=True' --lines '+FERMIHTC_GraceMemory=8000' --lines '+FERMIHTC_GraceLifetime=3600' \\
 --append_condor_requirements='(TARGET.HAS_SINGULARITY=?=true)' \\
 --tar_file_name "dropbox://$(pwd)/bin_dir.tar" \\
 --email-to aantonakis@ucsb.edu \\
 -N %d \\
 --disk 100GB \\
 --expected-lifetime 10h \\
-"file://$(pwd)/grid_executable_multi_dim_tracks.sh" \\
+"file://$(pwd)/grid_executable_merge_hists.sh" \\
 "%s" \\
 "%s"'''%(ngrid,OutputDir,args.output)
 

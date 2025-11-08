@@ -52,16 +52,18 @@ const UInt_t kNdims = 10;
 const Float_t kTrackCut = 60.; // cm
 
 //const TString kLabels[kNdims] = { "x", "y", "z", "txz", "tyz", "integral"};
-//const TString kTitles[kNdims] = { "x (cm)", "y (cm)", "z (cm)", 
+const TString kTitles[kNdims] = { "x", "y", "z", "txz", "txy", "dqdx", "Q", "W", "G", "P"};
+ 
 //    "ThetaXZ (deg)", "ThetaYZ (deg)", "Integral"};
 
 // Binnning --> Go as fine as possible and coarse grain later if needed
 // x, y, z, txz, tyz, integral, width, goodness
 
 // Super Fine Width Binning for hit train testing
-const Int_t kNbins[kNdims] =   { 200,  200, 250, 180,  180, 1000, 1000, 1600, 500, 2};
+//
+const Int_t kNbins[kNdims] =   { 200, 200, 250, 36, 36, 1000, 1000, 1600, 500, 2};
 
-//const Int_t kNbins[kNdims] =   {  200,  200, 250, 180,  180, 1000, 320, 50};
+// The Limits are mostly finalized
 const Double_t kXmin[kNdims] = { -200, -200, 0,  -90, -90, 0, 0,    0,   0,  0};
 const Double_t kXmax[kNdims] = {  200,  200, 500, 90,  90, 3000, 3000, 16,  100, 2};
 
@@ -181,6 +183,15 @@ void multi_dim_tracks_grid(TString list_file, TString out_suffix,
       h[i] = static_cast<THnSparseD*>( h_temp->Projection(dim.size(), dim.data()) );
       hTracks[i] = static_cast<THnSparseD*>( h_temp_trk->Projection(dim.size(), dim.data()) );
       hTrackFlags[i] = static_cast<THnSparseD*>( h_temp_trk_flag->Projection(dim.size(), dim.data()) );
+      h[i]->SetName(Form("hHit%d", i));
+      hTracks[i]->SetName(Form("hTrack%d", i));
+
+      // Set The axes labels       
+      for (int j = 0; j < dim.size(); ++j) {
+        h[i]->GetAxis(j)->SetTitle(kTitles[dim[j]]);
+        hTracks[i]->GetAxis(j)->SetTitle(kTitles[dim[j]]);
+      }
+
       h_temp->Delete();
       h_temp_trk->Delete();
       h_temp_trk_flag->Delete();
@@ -238,6 +249,9 @@ void multi_dim_tracks_grid(TString list_file, TString out_suffix,
 
           // goodness cut
           if (my.goodness[ip][i] >= 100.) continue;
+          
+	  // This may kill the "pathological" hits
+          if (my.mult[ip][i] > 1) continue;
 
           // hit trains have widths in increments of exactly 0.5
           // skip hits from these
