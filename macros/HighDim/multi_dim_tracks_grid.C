@@ -44,8 +44,8 @@ using ROOT::Math::XYZVector;
 std::vector<TString> filenames_from_input(const TString&, int);
 TString basename_prefix(const TString&, const TString& prefix="", const TString& suffix="");
 bool is_int(Float_t);
-bool is_one_third(float x, float tol = 1e-3);
-bool is_two_thirds(float x, float tol = 1e-3);
+bool is_one_third(float x, float tol = 1e-4);
+bool is_two_thirds(float x, float tol = 1e-4);
 
 const UInt_t kNdims = 10;
 
@@ -437,11 +437,11 @@ bool is_int(Float_t val) {
     return std::abs(roundf(val) - val) < 0.00001f;
 }
 
-bool is_one_third(float x, float tol = 1e-3) {
+bool is_one_third(float x, float tol = 1e-4) {
     return std::fabs(x - 1.0f/3.0f) < tol;
 }
 
-bool is_two_thirds(float x, float tol = 1e-3) {
+bool is_two_thirds(float x, float tol = 1e-4) {
     return std::fabs(x - 2.0f/3.0f) < tol;
 }
 

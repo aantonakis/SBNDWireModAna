@@ -68,7 +68,7 @@ echo "@@ run"
 # 8 = Goodness
 # 9 = Pathological
 
-root -l -b -q "merge_hists_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", {0, 1, 2})" &> log_${nProcess}.log
+root -l -b -q "merge_hists_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", {1, 2, 6})" &> log_${nProcess}.log
 
 
 # //////////////////////////////////////////////////////////

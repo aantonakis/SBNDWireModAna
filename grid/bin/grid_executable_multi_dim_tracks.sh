@@ -68,7 +68,7 @@ echo "@@ run"
 # 8 = Goodness
 # 9 = Pathological
 
-root -l -b -q "multi_dim_tracks_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", true, true, true, true, true, {0, 3, 6, 7, 9}, true, false, false, false)" &> log_${nProcess}.log
+root -l -b -q "multi_dim_tracks_grid.C(\"input_list_${nProcess}.txt\", \"${nProcess}\", true, true, true, true, true, {0, 1, 2, 3, 4, 6, 7}, false, false, true, false)" &> log_${nProcess}.log
 
 
 # //////////////////////////////////////////////////////////
