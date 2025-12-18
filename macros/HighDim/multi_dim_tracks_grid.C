@@ -259,7 +259,15 @@ void multi_dim_tracks_grid(TString list_file, TString out_suffix,
 	  
 	  // Angle code goes here!
 	  get_dir(trk_thxz, trk_thyz, my.tpc[ip][i], ip, *my.trk_dirx, *my.trk_diry, *my.trk_dirz);
-          
+
+          // TODO NEW! High Angle Cut as of Nov 17 2025
+          //if (std::abs(trk_thxz) > 80) continue;
+       
+          // TODO New! Geometrical Cut to alleviate affects related to support structures, etc.
+          // For now let's try a 5 cm geometrical cut
+          //if ((my.tpc[ip][i]) == 0 && (my.x[ip][i] < -195 || my.x[ip][i] > -5)) continue;
+          //if ((my.tpc[ip][i]) == 1 && (my.x[ip][i] > 195 || my.x[ip][i] < 5)) continue;
+             
           // cut out large angles for lifetime correction
           if ( (life_sel) && (std::abs(trk_thxz) > 49) ) continue;
 
